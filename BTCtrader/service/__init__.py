@@ -3,12 +3,14 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 from .bitpay import Bitpay
+from .bitstamp import Bitstamp
 from .coinbase import Coinbase
 from .kraken import Kraken
 from .paymium import Paymium
 
 __SERVICES__ = [
     Bitpay,
+    Bitstamp,
     Coinbase,
     Kraken,
     Paymium,
