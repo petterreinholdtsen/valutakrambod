@@ -27,8 +27,8 @@ class Coinbase(Service):
             #print(sj)
             (bj, br) = self._jsonget(buyurl)
             #print(bj)
-            ask = bj['data']['amount']
-            bid = sj['data']['amount']
+            ask = float(bj['data']['amount'])
+            bid = float(sj['data']['amount'])
             res.append({
                 'from': f,
                 'to': t,

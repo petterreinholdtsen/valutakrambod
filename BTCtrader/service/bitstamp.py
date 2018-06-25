@@ -39,14 +39,14 @@ https://www.bitstamp.com/help/api#general-usage .
             # should we catch it?
             j, r = self._jsonget(url)
             #print(j)
-            ask = j['ask']
-            bid = j['bid']
+            ask = float(j['ask'])
+            bid = float(j['bid'])
             res.append({
                 'from': f,
                 'to': t,
                 'ask': ask,
                 'bid': bid,
-                'when': j['timestamp'],
+                'when': int(j['timestamp']),
             })
         return res
 

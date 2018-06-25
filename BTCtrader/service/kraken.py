@@ -41,8 +41,8 @@ https://www.kraken.com/help/api#general-usage .
             #print(j)
             if 0 != len(j['error']):
                 raise Error(j['error'])
-            ask = j['result'][pair]['a'][0]
-            bid = j['result'][pair]['b'][0]
+            ask = float(j['result'][pair]['a'][0])
+            bid = float(j['result'][pair]['b'][0])
             res.append({
                 'from': f,
                 'to': t,
