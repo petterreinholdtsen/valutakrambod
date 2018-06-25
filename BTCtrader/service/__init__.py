@@ -6,6 +6,7 @@ from .bitpay import Bitpay
 from .bitstamp import Bitstamp
 from .bl3p import Bl3p
 from .coinbase import Coinbase
+from .hitbtc import Hitbtc
 from .kraken import Kraken
 from .paymium import Paymium
 
@@ -14,6 +15,7 @@ __SERVICES__ = [
     Bitstamp,
     Bl3p,
     Coinbase,
+    Hitbtc,
     Kraken,
     Paymium,
 ]
