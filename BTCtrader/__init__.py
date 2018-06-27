@@ -29,8 +29,10 @@ http://www.norges-bank.no/RSS/Euro-EUR---dagens-valutakurs-fra-Norges-Bank/
 
 import BTCtrader.service
 
+from tornado import ioloop
+
 def bcc_transaction_stream(callback):
-        """
+    """
 Telnet interface
 There is an experimental telnet streaming interface on TCP port 27007 at
 api.bitcoincharts.com.
@@ -40,11 +42,24 @@ accurate or write trading bots that rely on it.
 """
 
 def BTCrates():
-    for e in service.knownServices():
-            s = e()
-            print(s.servicename() + ":")
-            for p in s.currentRates():
-                    print(p)
+    collectors = []
+    for e in BTCtrader.service.knownServices():
+        s = e()
+        print(s.servicename() + ":")
+        c = s.currentRates()
+        s = s.websocket()
+        if s:
+            collectors.append(s)
+        for p in c.keys():
+            print("%s-%s: %s" % (p[0], p[1], c[p]))
+    for c in collectors:
+        c.connect()
+    try:
+        ioloop.IOLoop.instance().start()
+    except KeyboardInterrupt:
+        pass
+    for c in collectors:
+        c.close()
 
 if __name__ == '__main__':
     BTCrates()

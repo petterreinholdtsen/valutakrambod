@@ -6,10 +6,10 @@ from BTCtrader.services import Service
 
 class Bitpay(Service):
     """
-Query the Bitpay API.  This API do not distingquish ask and pay, so
-those values are identical.
+Query the Bitpay API.  This API do not provide both ask and pay, so
+those values are set to be identical.
 
-Documentation is available from ? .
+Documentation is available from https://bitpay.com/api .
 """
     baseurl = "https://bitpay.com/rates/"
     def servicename(self):
@@ -20,11 +20,12 @@ Documentation is available from ? .
         return [
             ('BTC', 'NOK'),
             ('BTC', 'EUR'),
+            ('BTC', 'USD'),
             ]
     def currentRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
-        res = []
+        res = {}
         for p in pairs:
             f = p[0]
             t = p[1]
@@ -34,15 +35,14 @@ Documentation is available from ? .
             #print(j)
             if 'error' in j:
                 raise Error(j['error'])
-            ask = bid = j['data']['rate']
-            res.append({
-                'from': f,
-                'to': t,
-                'ask': ask,
-                'bid': bid,
-                'when': None,
-            })
+            rate = j['data']['rate']
+            self.updateRates(p, rate, rate, None)
+            res[p] = self.rates[p]
         return res
+
+    def websocket(self):
+        """Bitpay do not provide websocket API 2018-06-27."""
+        return None
 
 def main():
     """

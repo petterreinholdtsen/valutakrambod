@@ -25,22 +25,20 @@ Query the Bitmynt API.
         #print(url)
         j, r = self._jsonget(url)
         #print(j)
-        res = []
+        res = {}
         for p in pairs:
-            #print(pair)
-            f = p[0]
-            t = p[1]
-            ask = float(j[t.lower()]['sell'])
-            bid = float(j[t.lower()]['buy'])
-            res.append({
-                'from': f,
-                'to': t,
-                'ask': ask,
-                'bid': bid,
-                # FIXME convert timestamp
-                'when': j['time'],
-            })
+            t = p[1].lower()
+            if t in j:
+                self.updateRates(p,
+                                 float(j[t]['sell']), # ask
+                                 float(j[t]['buy']), # bid
+                                 j['timestamp'])
+                res[p] = self.rates[p]
         return res
+
+    def websocket(self):
+        """Bitmynt do not provide websocket API 2018-06-27."""
+        return None
 
 def main():
     """

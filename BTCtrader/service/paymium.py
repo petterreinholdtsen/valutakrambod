@@ -4,9 +4,12 @@
 
 from BTCtrader.services import Service
 
-# https://github.com/Paymium/api-documentation/#ticker
 
 class Paymium(Service):
+    """Query the Paymium API.  Documentation is available from
+https://github.com/Paymium/api-documentation/#ticker
+
+    """
     baseurl = "https://paymium.com/api/v1/data/"
     def servicename(self):
         return "Paymium"
@@ -18,7 +21,7 @@ class Paymium(Service):
     def currentRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
-        res = []
+        res = {}
         for p in pairs:
             f = p[0]
             t = p[1]
@@ -32,13 +35,8 @@ class Paymium(Service):
             #print(j)
             ask = j['ask']
             bid = j['bid']
-            res.append({
-                'from': f,
-                'to': t,
-                'ask': ask,
-                'bid': bid,
-                'when': j['at']
-            })
+            self.updateRates(p, ask, bid, j['at'])
+            res[p] = self.rates[p]
         return res
 
 def main():

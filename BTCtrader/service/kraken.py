@@ -29,7 +29,7 @@ https://www.kraken.com/help/api#general-usage .
     def currentRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
-        res = []
+        res = {}
         for p in pairs:
             f = p[0]
             t = p[1]
@@ -43,14 +43,13 @@ https://www.kraken.com/help/api#general-usage .
                 raise Error(j['error'])
             ask = float(j['result'][pair]['a'][0])
             bid = float(j['result'][pair]['b'][0])
-            res.append({
-                'from': f,
-                'to': t,
-                'ask': ask,
-                'bid': bid,
-                'when': None,
-            })
+            self.updateRates(p, ask, bid, None)
+            res[p] = self.rates[p]
         return res
+
+    def websocket(self):
+        """Kraken do not provide websocket API 2018-06-27."""
+        return None
 
 def main():
     """

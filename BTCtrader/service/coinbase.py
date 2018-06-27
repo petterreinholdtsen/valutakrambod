@@ -17,7 +17,7 @@ class Coinbase(Service):
     def currentRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
-        res = []
+        res = {}
         for p in pairs:
             f = p[0]
             t = p[1]
@@ -29,14 +29,13 @@ class Coinbase(Service):
             #print(bj)
             ask = float(bj['data']['amount'])
             bid = float(sj['data']['amount'])
-            res.append({
-                'from': f,
-                'to': t,
-                'ask': ask,
-                'bid': bid,
-                'when': None,
-            })
+            self.updateRates(p, ask, bid, None)
+            res[p] = self.rates[p]
         return res
+
+    def websocket(self):
+        """Coinbase do not provide websocket API 2018-06-27."""
+        return None
 
 def main():
     """
