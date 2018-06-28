@@ -2,13 +2,15 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
-import json
-import dateutil.parser
 import datetime
+import dateutil.parser
+import json
+import time
 from pytz import UTC
 
 from tornado import ioloop
 
+from BTCtrader.services import Orderbook
 from BTCtrader.services import Service
 from BTCtrader.websocket import WebSocketClient
 
@@ -64,7 +66,7 @@ Query the Hitbtc API.
         def _on_connection_success(self):
             for p in self.service.ratepairs():
                 self.send({
-                    "method": "subscribeTicker",
+                    "method": "subscribeOrderbook", # subscribeTicker
                     "params": {
                         "symbol": "%s%s" % (p[0], p[1])
                     },
@@ -74,16 +76,55 @@ Query the Hitbtc API.
         def datestr2epoch(self, datestr):
             when = dateutil.parser.parse(datestr)
             return (when - self.epoch).total_seconds()
+        def symbols2pair(self, symbol):
+            return (symbol[:3], symbol[3:])
         def _on_message(self, msg):
             m = json.loads(msg)
             #print(m)
-            if 'method' in m and "ticker" == m['method']:
-                pair = (m['params']['symbol'][:3], m['params']['symbol'][3:])
-                self.service.updateRates(pair,
-                                         m['params']['ask'],
-                                         m['params']['bid'],
-                                         self.datestr2epoch(m['params']['timestamp']),
-                )
+            #print()
+            if 'method' in m:
+                if "ticker" == m['method']:
+                    pair = self.symbols2pair(m['params']['symbol'])
+                    self.service.updateRates(pair,
+                                             m['params']['ask'],
+                                             m['params']['bid'],
+                                             self.datestr2epoch(m['params']['timestamp']),
+                    )
+                if "snapshotOrderbook" == m['method']:
+                    pair = self.symbols2pair(m['params']['symbol'])
+                    o = Orderbook()
+                    for side in ('ask', 'bid'):
+                        oside = {
+                            'ask' : o.SIDE_ASK,
+                            'bid' : o.SIDE_BID,
+                        }[side]
+                        #print(m['params'][side])
+                        for e in m['params'][side]:
+                            o.update(oside, float(e['price']), float(e['size']))
+                    # FIXME setting our own timestamp, as there is no
+                    # timestamp from the source.  Ask bl3p to set one?
+                    o.setupdated(time.time())
+                    self.service.updateOrderbook(pair, o)
+                if "updateOrderbook" == m['method']:
+                    pair = self.symbols2pair(m['params']['symbol'])
+                    o = self.service.orderbooks[pair].copy()
+                    for side in ('ask', 'bid'):
+                        oside = {
+                            'ask' : o.SIDE_ASK,
+                            'bid' : o.SIDE_BID,
+                        }[side]
+                        for e in m['params'][side]:
+                            price = float(e['price'])
+                            if '0.00' == e['size']:
+                                o.remove(oside, price)
+                            else:
+                                volume = float(e['size'])
+                                o.update(oside, price, volume)
+                    # FIXME setting our own timestamp, as there is no
+                    # timestamp from the source.  Ask bl3p to set one?
+                    o.setupdated(time.time())
+                    self.service.updateOrderbook(pair, o)
+
         def _on_connection_close(self):
             pass
         def _on_connection_error(self, exception):

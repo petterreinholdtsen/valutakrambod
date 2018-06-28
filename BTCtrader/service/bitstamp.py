@@ -6,6 +6,7 @@ import json
 
 from tornado import ioloop
 
+from BTCtrader.services import Orderbook
 from BTCtrader.services import Service
 from BTCtrader.websocket import WebSocketClient
 
@@ -94,14 +95,19 @@ the websocket API.
                 })
         def _on_message(self, msg):
             m = json.loads(msg)
+            #print(m)
             if 'data' == m['event']:
+                o = Orderbook()
                 d = json.loads(m['data'])
-                self.service.updateRates(self._channelmap[m['channel']],
-                                         d['asks'][0][0],
-                                         d['bids'][0][0],
-                                         int(d['timestamp']))
-                #print(d)
-                #print(msg)
+                for side in ('asks', 'bids'):
+                    oside = {
+                        'asks' : o.SIDE_ASK,
+                        'bids' : o.SIDE_BID,
+                    }[side]
+                    for e in d[side]:
+                        o.update(oside, float(e[0]), float(e[1]))
+                o.setupdated(int(d['timestamp']))
+                self.service.updateOrderbook(self._channelmap[m['channel']], o)
         def _on_connection_close(self):
             pass
         def _on_connection_error(self, exception):

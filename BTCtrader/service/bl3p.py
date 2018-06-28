@@ -3,9 +3,11 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import json
+import time
 
 from tornado import ioloop
 
+from BTCtrader.services import Orderbook
 from BTCtrader.services import Service
 from BTCtrader.websocket import WebSocketClient
 
@@ -74,11 +76,19 @@ https://bl3p.eu/api .
             pass
         def _on_message(self, msg):
             m = json.loads(msg)
-            # FIXME verify the order of the order book extract
-            self.service.updateRates(self._marketmap[m['marketplace']],
-                                     m['asks'][0]['price_int'] / 100000,
-                                     m['bids'][0]['price_int'] / 100000,
-                                     None)
+            #print(m)
+            o = Orderbook()
+            for side in ('asks', 'bids'):
+                oside = {
+                    'asks' : o.SIDE_ASK,
+                    'bids' : o.SIDE_BID,
+                }[side]
+                for e in m[side]:
+                    o.update(oside, e['price_int'] / 100000, e['price_int'] / 100000 )
+            # FIXME setting our own timestamp, as there is no
+            # timestamp from the source.  Ask bl3p to set one?
+            o.setupdated(time.time())
+            self.service.updateOrderbook(self._marketmap[m['marketplace']], o)
         def _on_connection_close(self):
             pass
         def _on_connection_error(self, exception):
