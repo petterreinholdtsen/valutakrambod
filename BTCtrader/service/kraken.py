@@ -26,7 +26,7 @@ https://www.kraken.com/help/api#general-usage .
             return self.keymap[currency]
         else:
             return currency
-    def currentRates(self, pairs = None):
+    def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}

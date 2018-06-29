@@ -14,7 +14,7 @@ class Coinbase(Service):
             ('BTC', 'NOK'),
             ]
     
-    def currentRates(self, pairs = None):
+    def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}

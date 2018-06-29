@@ -1,0 +1,124 @@
+#!/usr/bin/python3
+
+import curses
+import optparse
+import time
+
+from sortedcontainers.sorteddict import SortedDict
+from tornado import ioloop
+
+import BTCtrader
+#BTCtrader.BTCrates_curses()
+
+class CursesViewer(object):
+    def __init__(self):
+        self.rates = SortedDict()
+        self.lastrequest = {}
+    def data(self, servicename, pair, side, price, stored):
+        self.rates[(servicename, pair, side)] = (price, stored)
+        self.drawdata()
+    def drawdata(self):
+        line = 0
+        now = time.time()
+        for entry in self.rates.keys():
+            if 'ask' == entry[2]:
+                sister = (entry[0], entry[1], 'bid')
+                ask = self.rates[entry][0]
+                if sister in self.rates:
+                    bid = self.rates[sister][0]
+                else:
+                    bid = 0.0
+                s = "%8s %s%s %11.4f %11.4f %5.1f %4d" % (
+                    entry[0],
+                    entry[1][0],
+                    entry[1][1],
+                    ask,
+                    bid,
+                    (1-bid/ask)*100,
+                    now - self.rates[entry][1] ,
+                )
+                if self.c:
+                    self.win.addstr( line, 0, s)
+                    line = line + 1
+                else:
+                    print(s)
+        if self.c:
+            self.win.refresh()
+        self.considerRefresh()
+
+    def newdata(self, data, service, pair):
+        for side in ('ask', 'bid'):
+            self.data(service.servicename(), pair, side, service.rates[pair][side],
+                      service.rates[pair]['stored'])
+
+    def considerRefresh(self):
+        # refresh left behind numbers at least every 60 seconds
+        refreshtime = 60
+        now = time.time()
+        for service in self.services:
+            update = False
+            if service in self.lastrequest:
+                lastupdatereq = self.lastrequest[service]
+            else:
+                lastupdatereq = 0
+            for pair in service.rates.keys():
+                if service.rates[pair]['stored'] + refreshtime < now:
+                    update = True
+            if update and lastupdatereq + refreshtime < now:
+                #print("request callback for %s" % service.servicename())
+                self.ioloop.spawn_callback(service.fetchRates,
+                                           service.rates.keys())
+                self.lastrequest[service] = now
+                break
+
+    def run(self):
+        parser = optparse.OptionParser()
+        parser.add_option('-c', action="store_true", dest='curses', default=False)
+        opt, args = parser.parse_args()
+        self.c = opt.curses
+        if self.c:
+            stdscr = curses.initscr()
+            curses.noecho()
+            curses.cbreak()
+            stdscr.keypad(1)
+
+            begin_x = 1; begin_y = 1
+            height = 30; width = 60
+            self.win = curses.newwin(height, width, begin_y, begin_x)
+
+        self.ioloop = ioloop.IOLoop.instance()
+        collectors = []
+        self.services = []
+        for e in BTCtrader.service.knownServices():
+            s = e()
+            self.services.append(s)
+            s.subscribe(self.newdata, self)
+            sname = s.servicename()
+            rates = s.currentRates()
+            sock = s.websocket()
+            if sock:
+                collectors.append(sock)
+            for p in rates.keys():
+                for side in ('ask', 'bid'):
+                    self.data(sname, p, side, rates[p][side], rates[p]['stored'])
+
+        for c in collectors:
+            c.connect()
+
+        try:
+            self.ioloop.start()
+        except KeyboardInterrupt:
+            pass
+        for c in collectors:
+            c.close()
+
+        if self.c:
+            curses.endwin()
+            curses.nocbreak(); stdscr.keypad(0); curses.echo()
+
+def main():
+    c = CursesViewer()
+    c.run()
+
+if __name__ == '__main__':
+    main()

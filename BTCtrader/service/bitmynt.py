@@ -18,7 +18,7 @@ Query the Bitmynt API.
             ('BTC', 'NOK'),
             ('BTC', 'EUR'),
             ]
-    def currentRates(self, pairs = None):
+    def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         url = "%sticker.pl" % self.baseurl

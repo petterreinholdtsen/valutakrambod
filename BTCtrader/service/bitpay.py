@@ -22,7 +22,7 @@ Documentation is available from https://bitpay.com/api .
             ('BTC', 'EUR'),
             ('BTC', 'USD'),
             ]
-    def currentRates(self, pairs = None):
+    def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}

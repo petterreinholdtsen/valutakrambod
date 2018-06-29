@@ -26,17 +26,6 @@ https://bl3p.eu/api .
             ('BTC', 'EUR'),
             ]
 
-    def currentRates(self, pairs = None):
-        if {} == self.rates:
-            self.fetchRates(pairs)
-        if pairs is None:
-            return self.rates
-        else:
-            res = {}
-            #print(pairs)
-            for p in pairs:
-                res[p] = self.rates[p]
-            return res
     def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()

@@ -61,8 +61,8 @@ class Service(object):
         return j, response
     def servicename(self):
         raise NotImplementedError()
-    def subscribe(self, callback):
-        pass
+    def subscribe(self, callback, data):
+        self.subscribers.append((callback, data))
     def updateRates(self, pair, ask, bid, when):
         now = time.time()
         self.rates[pair] = {
@@ -71,12 +71,12 @@ class Service(object):
             'when': when,
             'stored': now,
         }
-        self.stats(pair)
+        for s in self.subscribers:
+            s[0](s[1], self, pair)
+#        self.stats(pair)
 
     def updateOrderbook(self, pair, book):
         self.orderbooks[pair] = book
-        print("ask len %d" % len(book.ask.keys()))
-        print("bid len %d" % len(book.bid.keys()))
         self.updateRates(pair,
                          book.ask.peekitem(0)[0],
                          book.bid.peekitem(0)[0],
@@ -125,7 +125,7 @@ service provide currency exchange rates for, on this form:
 ]
 """
         raise NotImplementedError()
-    def currentrates(self):
+    def currentRates(self, pairs = None):
         """Return list of currency exchange rates, on this form
 
 {
@@ -145,6 +145,19 @@ is such that such that
 This method must be implemented in each service.
 
         """
+    def currentRates(self, pairs = None):
+        if {} == self.rates:
+            self.fetchRates(pairs)
+        if pairs is None:
+            return self.rates
+        else:
+            res = {}
+            #print(pairs)
+            for p in pairs:
+                res[p] = self.rates[p]
+            return res
+
+    def fetchRates(self, pairs = None):
         raise NotImplementedError()
 
     def websocket(self):
