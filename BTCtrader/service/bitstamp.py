@@ -83,7 +83,7 @@ the websocket API.
             super().connect(url)
         def _on_connection_success(self):
             channels = [
-                'order_book_btcusd',
+                'order_book', # note, order_book_btcusd exist but is silent
                 'order_book_btceur'
             ]
             for c in channels:
