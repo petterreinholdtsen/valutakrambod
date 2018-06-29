@@ -30,6 +30,7 @@ the websocket API.
         return [
             ('BTC', 'USD'),
             ('BTC', 'EUR'),
+            ('EUR', 'USD'),
             ]
     def _currencyMap(self, currency):
         if currency in self.keymap:
@@ -52,8 +53,9 @@ the websocket API.
             pairs = self.ratepairs()
         res = {}
         for p in pairs:
+            f = p[0]
             t = p[1]
-            url = "%sticker/btc%s/" % (self.baseurl, t.lower())
+            url = "%sticker/%s%s/" % (self.baseurl, f.lower(), t.lower())
             #print(url)
             # this call raise HTTP error with invalid currency.
             # should we catch it?
@@ -66,13 +68,28 @@ the websocket API.
         return res
     class WSClient(WebSocketClient):
         _channelmap = {
-            'order_book' :        ('BTC', 'USD'),
+            'order_book_bchbtc' : ('BCH', 'BTC'),
+            'order_book_bcheur' : ('BCH', 'EUR'),
+            'order_book_bchusd' : ('BCH', 'USD'),
+            'order_book' :        ('BTC', 'USD'), # note, not order_book_btcusd
             'order_book_btceur' : ('BTC', 'EUR'),
-            'order_book_btcusd' : ('BTC', 'USD'),
-            # FIXME add the other channels (eurusd, xrpusd, xrpeur,
-            # xrpbtc, ltcusd, ltceur, ltcbtc, ethusd, etheur, ethbtc,
-            # bchusd, bcheur, bchbtc)
+            'order_book_ethbtc' : ('ETH', 'BTC'),
+            'order_book_etheur' : ('ETH', 'EUR'),
+            'order_book_ethusd' : ('ETH', 'USD'),
+            'order_book_eurusd' : ('EUR', 'USD'),
+            'order_book_ltcbtc' : ('LTC', 'BTC'),
+            'order_book_ltceur' : ('LTC', 'EUR'),
+            'order_book_ltcusd' : ('LTC', 'USD'),
+            'order_book_xrpbtc' : ('XRP', 'BTC'),
+            'order_book_xrpeur' : ('XRP', 'EUR'),
+            'order_book_xrpusd' : ('XRP', 'USD'),
         }
+        # Channels to subscribe to, should match ratepars() above
+        _channels = [
+            'order_book',
+            'order_book_btceur',
+            'order_book_eurusd',
+        ]
         def __init__(self, service):
             super().__init__()
             self.url = "wss://ws.pusherapp.com/app/de504dc5763aeef9ff52?protocol=6&client=js&version=2.1.2&flash=false"
@@ -82,11 +99,7 @@ the websocket API.
                 url = self.url
             super().connect(url)
         def _on_connection_success(self):
-            channels = [
-                'order_book', # note, order_book_btcusd exist but is silent
-                'order_book_btceur'
-            ]
-            for c in channels:
+            for c in self._channels:
                 self.send({
                     "event": "pusher:subscribe",
                     "data": {
