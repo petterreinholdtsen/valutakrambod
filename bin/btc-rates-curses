@@ -28,7 +28,7 @@ class CursesViewer(object):
                     bid = self.rates[sister][0]
                 else:
                     bid = 0.0
-                s = "%8s %s%s %11.4f %11.4f %5.1f %4d" % (
+                s = "%15s %s%s %11.4f %11.4f %5.1f %4d" % (
                     entry[0],
                     entry[1][0],
                     entry[1][1],
