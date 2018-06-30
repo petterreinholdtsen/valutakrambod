@@ -28,16 +28,20 @@ class CursesViewer(object):
             if created is not None:
                 age = now - created
             else:
-                age = -1
-            s = "%15s %s%s %11.4f %11.4f %5.1f %4d %5d" % (
+                age = float('nan')
+            if askprice is not None and askprice != 0.0:
+                spread = (1-bidprice/askprice)*100
+            else:
+                spread = float('nan')
+            s = "%15s %s%s %11.4f %11.4f %5.1f %4d %6.f" % (
                 entry[0],
                 entry[1][0],
                 entry[1][1],
                 askprice,
                 bidprice,
-                (1-bidprice/askprice)*100,
+                spread,
                 now - self.rates[entry][2],
-                age
+                age,
             )
             if self.c:
                 self.win.addstr( line, 0, s)
