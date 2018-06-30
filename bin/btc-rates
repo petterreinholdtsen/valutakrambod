@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import BTCtrader
+import kaupang
 
 if __name__ == '__main__':
-    BTCtrader.BTCrates()
+    kaupang.BTCrates()

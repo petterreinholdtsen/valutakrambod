@@ -7,7 +7,7 @@ import datetime
 
 from pytz import UTC
 
-from BTCtrader.services import Service
+from kaupang.services import Service
 
 class Exchangerates(Service):
     """Query the Exchange rates API. Documentatoin is available from

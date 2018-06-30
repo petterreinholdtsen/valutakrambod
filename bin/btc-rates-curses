@@ -7,7 +7,7 @@ import time
 from sortedcontainers.sorteddict import SortedDict
 from tornado import ioloop
 
-import BTCtrader
+import kaupang
 
 class CursesViewer(object):
     def __init__(self, currencies = None):
@@ -118,7 +118,7 @@ class CursesViewer(object):
         self.ioloop = ioloop.IOLoop.instance()
         collectors = []
         self.services = []
-        for e in BTCtrader.service.knownServices():
+        for e in kaupang.service.knownServices():
             s = e()
             self.services.append(s)
             s.subscribe(self.newdata, self)

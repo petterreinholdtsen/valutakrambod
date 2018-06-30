@@ -27,7 +27,7 @@ http://www.norges-bank.no/RSS/Euro-EUR---dagens-valutakurs-fra-Norges-Bank/
 
 """
 
-import BTCtrader.service
+import kaupang.service
 
 from tornado import ioloop
 
@@ -43,7 +43,7 @@ accurate or write trading bots that rely on it.
 
 def BTCrates():
     collectors = []
-    for e in BTCtrader.service.knownServices():
+    for e in kaupang.service.knownServices():
         s = e()
         print(s.servicename() + ":")
         c = s.currentRates()

@@ -7,9 +7,9 @@ import time
 
 from tornado import ioloop
 
-from BTCtrader.services import Orderbook
-from BTCtrader.services import Service
-from BTCtrader.websocket import WebSocketClient
+from kaupang.services import Orderbook
+from kaupang.services import Service
+from kaupang.websocket import WebSocketClient
 
 class Bl3p(Service):
     """
