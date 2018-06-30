@@ -75,8 +75,9 @@ https://bl3p.eu/api .
                 for e in m[side]:
                     o.update(oside, e['price_int'] / 100000, e['price_int'] / 100000 )
             # FIXME setting our own timestamp, as there is no
-            # timestamp from the source.  Ask bl3p to set one?
-            o.setupdated(time.time())
+            # timestamp from the source.  Asked bl3p to set one in
+            # email sent 2018-06-27.
+            #o.setupdated(time.time())
             self.service.updateOrderbook(self._marketmap[m['marketplace']], o)
         def _on_connection_close(self):
             pass
