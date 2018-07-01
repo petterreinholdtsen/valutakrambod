@@ -16,13 +16,19 @@ class CursesViewer(object):
         self.errlog = []
         self.currecies = currencies
     def logerror(self, msg):
-        self.errlog.append(msg)
+        now = time.time()
+        self.errlog.append((now, msg))
     def data(self, servicename, pair, askprice, bidprice, stored, created):
         self.rates[(servicename, pair)] = (askprice, bidprice, stored, created)
         self.drawdata()
     def drawdata(self):
         line = 2
         now = time.time()
+        s = "%15s %-6s %-11s %-11s %-5s %4s %6s" % (
+            "Name", "Pair", "Ask", "Bid", "Spr", "", "",
+            )
+        if self.c:
+            self.win.addstr( 1, 0, s)
         for entry in self.rates.keys():
             (askprice, bidprice, stored, created) = self.rates[entry]
             if created is not None:
@@ -49,8 +55,9 @@ class CursesViewer(object):
             else:
                 print(s)
         line = 0
-        for error in self.errlog[0:10]:
-            self.win.addstr( line, 60, error[0:15])
+        if self.c:
+            for when, error in self.errlog[0:10]:
+                self.win.addstr( line, 60, error[0:15])
         if self.c:
             self.win.refresh()
         self.considerRefresh()
