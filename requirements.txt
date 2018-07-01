@@ -1,4 +1,4 @@
 dateutils
 sortedcontainers
 tornado
-websocket
+websocket-client
