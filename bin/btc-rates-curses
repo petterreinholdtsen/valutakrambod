@@ -62,7 +62,7 @@ class CursesViewer(object):
             self.win.refresh()
         self.considerRefresh()
 
-    def newdata(self, data, service, pair):
+    def newdata(self, service, pair):
         self.data(
             service.servicename(), pair,
             service.rates[pair]['ask'],
@@ -132,7 +132,7 @@ class CursesViewer(object):
         for e in kaupang.service.knownServices():
             s = e()
             self.services.append(s)
-            s.subscribe(self.newdata, self)
+            s.subscribe(self.newdata)
             sname = s.servicename()
             self.runRefresh(s)
             rates = s.currentRates()

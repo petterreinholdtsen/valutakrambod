@@ -61,8 +61,8 @@ class Service(object):
         return j, response
     def servicename(self):
         raise NotImplementedError()
-    def subscribe(self, callback, data):
-        self.subscribers.append((callback, data))
+    def subscribe(self, callback):
+        self.subscribers.append(callback)
     def updateRates(self, pair, ask, bid, when):
         now = time.time()
         self.rates[pair] = {
@@ -72,7 +72,7 @@ class Service(object):
             'stored': now,
         }
         for s in self.subscribers:
-            s[0](s[1], self, pair)
+            s(self, pair)
 #        self.stats(pair)
 
     def updateOrderbook(self, pair, book):
