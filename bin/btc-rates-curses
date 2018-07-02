@@ -4,6 +4,7 @@ import curses
 import optparse
 import time
 
+from curses import wrapper
 from sortedcontainers.sorteddict import SortedDict
 from tornado import ioloop
 
@@ -27,8 +28,7 @@ class CursesViewer(object):
         s = "%15s %-6s %-11s %-11s %-5s %4s %6s" % (
             "Name", "Pair", "Ask", "Bid", "Spr", "", "",
             )
-        if self.c:
-            self.win.addstr( 1, 0, s)
+        self.stdscr.addstr( 1, 0, s)
         for entry in self.rates.keys():
             (askprice, bidprice, stored, created) = self.rates[entry]
             if created is not None:
@@ -49,17 +49,12 @@ class CursesViewer(object):
                 now - self.rates[entry][2],
                 age,
             )
-            if self.c:
-                self.win.addstr( line, 0, s)
-                line = line + 1
-            else:
-                print(s)
+            self.stdscr.addstr( line, 0, s)
+            line = line + 1
         line = 0
-        if self.c:
-            for when, error in self.errlog[0:10]:
-                self.win.addstr( line, 60, error[0:15])
-        if self.c:
-            self.win.refresh()
+        for when, error in self.errlog[0:10]:
+            self.stdscr.addstr( line, 65, error[0:15])
+        self.stdscr.refresh()
         self.considerRefresh()
 
     def newdata(self, service, pair):
@@ -73,15 +68,11 @@ class CursesViewer(object):
     def runRefresh(self, service):
         try:
             msg = "Updating %s" % service.servicename()
-            if self.c:
-                self.win.addstr( 0, 0, msg)
-                self.win.refresh()
-            else:
-                print(msg)
+            self.stdscr.addstr( 0, 0, msg)
+            self.stdscr.refresh()
             service.fetchRates(service.rates.keys())
-            if self.c:
-                self.win.addstr( 0, 0, ' ' * len(msg))
-                self.win.refresh()
+            self.stdscr.addstr( 0, 0, ' ' * len(msg))
+            self.stdscr.refresh()
         except Exception as e:
             self.logerror(str(e))
             # FIXME flag service as having problems?
@@ -111,21 +102,8 @@ class CursesViewer(object):
                 self.lastrequest[service] = now
                 break
 
-    def run(self):
-        parser = optparse.OptionParser()
-        parser.add_option('-c', action="store_true", dest='curses', default=False)
-        opt, args = parser.parse_args()
-        self.c = opt.curses
-        if self.c:
-            stdscr = curses.initscr()
-            curses.noecho()
-            curses.cbreak()
-            stdscr.keypad(1)
-
-            begin_x = 1; begin_y = 1
-            height = 30; width = 75
-            self.win = curses.newwin(height, width, begin_y, begin_x)
-
+    def run(self, stdscr):
+        self.stdscr = stdscr
         self.ioloop = ioloop.IOLoop.instance()
         collectors = []
         self.services = []
@@ -158,16 +136,29 @@ class CursesViewer(object):
         for c in collectors:
             c.close()
 
-        if self.c:
-            curses.nocbreak(); stdscr.keypad(0); curses.echo()
-            curses.endwin()
+class dummyCurses(object):
+    def addstr(self, x, y, s):
+        s = s.rstrip()
+        if "" != s:
+            print(s)
+    def refresh(self):
+        pass
+def dummywrapper(f):
+    return f(dummyCurses())    
 
 def main():
+    parser = optparse.OptionParser()
+    parser.add_option('-c', action="store_true", dest='curses', default=False)
+    opt, args = parser.parse_args()
+    
     # The set of currencies we care about, only pairs in this set is
     # relevant.
     currencies = ['BTC', 'USD', 'EUR', 'NOK']
     c = CursesViewer(currencies)
-    c.run()
+    if opt.curses:
+        wrapper(c.run)
+    else:
+        dummywrapper(c.run)
 
 if __name__ == '__main__':
     main()
