@@ -31,11 +31,16 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
         res = {}
         for market in j:
             pair = (market['id'][:3], market['id'][3:])
+            ask = bid = float('nan')
+            if 'ask' in market and market['ask'] is not None:
+                ask = float(market['ask'])
+            if 'bid' in market and market['bid'] is not None:
+                bid = float(market['bid'])
             #print(pair)
             if pair in pairs:
                 self.updateRates(pair,
-                                 float(market['ask']),
-                                 float(market['bid']),
+                                 ask,
+                                 bid,
                                  None)
                 res[pair] = self.rates[pair]
         return res
