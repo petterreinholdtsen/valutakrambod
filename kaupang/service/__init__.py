@@ -10,6 +10,7 @@ from .coinbase import Coinbase
 from .exchangerates import Exchangerates
 from .hitbtc import Hitbtc
 from .kraken import Kraken
+from .miraiex import MiraiEx
 from .paymium import Paymium
 
 __SERVICES__ = [
@@ -21,6 +22,7 @@ __SERVICES__ = [
     Exchangerates,
     Hitbtc,
     Kraken,
+    MiraiEx,
     Paymium,
 ]
 
