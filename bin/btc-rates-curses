@@ -15,7 +15,7 @@ class CursesViewer(object):
         self.rates = SortedDict()
         self.lastrequest = {}
         self.errlog = []
-        self.currecies = currencies
+        self.currencies = currencies
     def logerror(self, msg):
         now = time.time()
         self.errlog.append((now, msg))
