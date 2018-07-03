@@ -7,7 +7,7 @@ import datetime
 
 from pytz import UTC
 
-from kaupang.services import Service
+from valutakrambod.services import Service
 
 class Exchangerates(Service):
     """Query the Exchange rates API. Documentatoin is available from

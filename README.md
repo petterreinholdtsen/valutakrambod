@@ -1,7 +1,8 @@
-Kaupang
-=======
+Valutakrambod
+=============
 
-Kaupang is a Norse term for market-place. 
+Valutakrambod is a constructed Norwegian word for for currency
+market-place.
 
 This project is a pluggable (virtual) currency exchange API client
 library providing a uniform API to several currency exchanges.

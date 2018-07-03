@@ -2,7 +2,7 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
-from kaupang.services import Service
+from valutakrambod.services import Service
 
 
 class Paymium(Service):

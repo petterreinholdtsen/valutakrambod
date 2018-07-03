@@ -6,9 +6,9 @@ import json
 
 from tornado import ioloop
 
-from kaupang.services import Orderbook
-from kaupang.services import Service
-from kaupang.websocket import WebSocketClient
+from valutakrambod.services import Orderbook
+from valutakrambod.services import Service
+from valutakrambod.websocket import WebSocketClient
 
 class Bitstamp(Service):
     """Query the Bitstamp API.  Documentation is available from

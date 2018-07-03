@@ -8,7 +8,7 @@ from curses import wrapper
 from sortedcontainers.sorteddict import SortedDict
 from tornado import ioloop
 
-import kaupang
+import valutakrambod
 
 class CursesViewer(object):
     def __init__(self, currencies = None):
@@ -107,7 +107,7 @@ class CursesViewer(object):
         self.ioloop = ioloop.IOLoop.instance()
         collectors = []
         self.services = []
-        for e in kaupang.service.knownServices():
+        for e in valutakrambod.service.knownServices():
             s = e()
             self.services.append(s)
             s.subscribe(self.newdata)

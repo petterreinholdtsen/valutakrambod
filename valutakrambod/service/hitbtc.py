@@ -10,9 +10,9 @@ from pytz import UTC
 
 from tornado import ioloop
 
-from kaupang.services import Orderbook
-from kaupang.services import Service
-from kaupang.websocket import WebSocketClient
+from valutakrambod.services import Orderbook
+from valutakrambod.services import Service
+from valutakrambod.websocket import WebSocketClient
 
 class Hitbtc(Service):
     """
