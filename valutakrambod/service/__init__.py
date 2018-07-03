@@ -11,8 +11,15 @@ from .exchangerates import Exchangerates
 from .hitbtc import Hitbtc
 from .kraken import Kraken
 from .miraiex import MiraiEx
+from .oneforge import OneForge
 from .paymium import Paymium
 
+# Services requiring access keys or other configuration
+__SERVICES_LIMITED__ = [
+    OneForge,
+]
+
+# Services working without any configuration
 __SERVICES__ = [
     Bitmynt,
     Bitpay,
@@ -25,6 +32,10 @@ __SERVICES__ = [
     MiraiEx,
     Paymium,
 ]
+
+__SERVICES_ALL__ = []
+__SERVICES_ALL__.extend(__SERVICES__)
+__SERVICES_ALL__.extend(__SERVICES_LIMITED__)
 
 def knownServices():
     return __SERVICES__
