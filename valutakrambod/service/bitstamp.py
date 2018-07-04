@@ -3,6 +3,7 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import json
+import time
 
 from tornado import ioloop
 
@@ -124,6 +125,11 @@ Run simple self test.
     s = Bitstamp()
     print(s.currentRates())
 
+    s.subscribe(lambda service, pair: print(pair,
+                                            service.rates[pair]['ask'],
+                                            service.rates[pair]['bid'],
+                                            time.time() - service.rates[pair]['stored'],
+    ))
     c = s.websocket()
     c.connect()
     try:

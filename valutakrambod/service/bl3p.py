@@ -93,6 +93,11 @@ Run simple self test.
     s = Bl3p()
     print(s.currentRates())
 
+    s.subscribe(lambda service, pair: print(pair,
+                                            service.rates[pair]['ask'],
+                                            service.rates[pair]['bid'],
+                                            time.time() - service.rates[pair]['stored'] ,
+    ))
     c = s.websocket()
     c.connect()
     try:

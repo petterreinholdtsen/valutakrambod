@@ -139,7 +139,7 @@ Run simple self test.
     s.subscribe(lambda service, pair: print(pair,
                                             service.rates[pair]['ask'],
                                             service.rates[pair]['bid'],
-                                            service.rates[pair]['stored'],
+                                            time.time() - service.rates[pair]['stored'],
     ))
     c = s.websocket()
     c.connect()
