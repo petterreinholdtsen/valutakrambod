@@ -23,6 +23,7 @@ class CursesViewer(object):
         self.rates[(servicename, pair)] = (askprice, bidprice, stored, created)
         self.drawdata()
     def drawdata(self):
+        self.stdscr.clear()
         line = 2
         now = time.time()
         s = "%15s %-6s %-11s %-11s %-5s %4s %6s" % (
@@ -51,9 +52,10 @@ class CursesViewer(object):
             )
             self.stdscr.addstr( line, 0, s)
             line = line + 1
-        line = 0
+        line = line + 1
         for when, error in self.errlog[0:10]:
-            self.stdscr.addstr( line, 65, error[0:15])
+            self.stdscr.addstr(line, 2, "%.1f %s" % (now - when, error[0:60]))
+            line = line + 1
         self.stdscr.refresh()
         self.considerRefresh()
 
