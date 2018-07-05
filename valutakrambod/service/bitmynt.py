@@ -2,6 +2,8 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+import unittest
+
 from valutakrambod.services import Service
 
 class Bitmynt(Service):
@@ -40,12 +42,22 @@ Query the Bitmynt API.
         """Bitmynt do not provide websocket API 2018-06-27."""
         return None
 
-def main():
+class TestBitmynt(unittest.TestCase):
     """
 Run simple self test.
 """
-    s = Bitmynt()
-    print(s.currentRates())
+    def setUp(self):
+        self.s = Bitmynt()
+    def testCurrentRates(self):
+        res = self.s.currentRates()
+        pair = ('BTC', 'NOK')
+        self.assertTrue(pair in res)
+        ask = res[pair]['ask']
+        bid = res[pair]['bid']
+        self.assertTrue(ask >= bid)
+        spread = 100*(ask/bid-1)
+        self.assertTrue(spread > 0 and spread < 5)
 
 if __name__ == '__main__':
-    main()
+    t = TestBitmynt()
+    unittest.main()
