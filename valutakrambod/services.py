@@ -22,12 +22,14 @@ class Orderbook(object):
         o.bid = self.bid.copy()
         o.lastupdate = self.lastupdate
         return o
-    def update(self, side, price, volume):
+    def update(self, side, price, volume, timestamp = None):
         table = {
             self.SIDE_ASK : self.ask,
             self.SIDE_BID : self.bid,
         }[side]
         table[price] = volume
+        if timestamp and (self.lastupdate is None or timestamp > self.lastupdate):
+            self.lastupdate = timestamp
     def remove(self, side, price):
         table = {
             self.SIDE_ASK : self.ask,

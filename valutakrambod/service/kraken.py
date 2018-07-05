@@ -58,7 +58,7 @@ https://www.kraken.com/help/api#general-usage .
                 # as request 1796106.
                 for order in j['result'][pairstr][side]:
                     #print("Updating %s", (side, order), now - order[2])
-                    o.update(oside, float(order[0]), float(order[1]))
+                    o.update(oside, float(order[0]), float(order[1]), order[2])
                 #print(o)
             self.updateOrderbook(pair, o)
 
