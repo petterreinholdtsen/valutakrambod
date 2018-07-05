@@ -4,6 +4,7 @@
 
 import json
 import time
+import unittest
 
 from tornado import ioloop
 
@@ -86,24 +87,37 @@ https://bl3p.eu/api .
     def websocket(self):
         return self.WSClient(self)
 
-def main():
+class TestBl3p(unittest.TestCase):
     """
 Run simple self test.
 """
-    s = Bl3p()
-    print(s.currentRates())
+    def setUp(self):
+        self.s = Bl3p()
+    def testCurrentRates(self):
+        res = self.s.currentRates()
+        pair = ('BTC', 'EUR')
+        self.assertTrue(pair in res)
+        ask = res[pair]['ask']
+        bid = res[pair]['bid']
+        self.assertTrue(ask >= bid)
+    def FIXMEtestWebsocket(self):
+        """Test websocket support.  No idea how to terminate it automatically,
+so not running by default.
 
-    s.subscribe(lambda service, pair: print(pair,
-                                            service.rates[pair]['ask'],
-                                            service.rates[pair]['bid'],
-                                            time.time() - service.rates[pair]['stored'] ,
-    ))
-    c = s.websocket()
-    c.connect()
-    try:
-        ioloop.IOLoop.instance().start()
-    except KeyboardInterrupt:
-        c.close()
+        """
+        self.s.subscribe(lambda service, pair:
+                         print(pair,
+                               service.rates[pair]['ask'],
+                               service.rates[pair]['bid'],
+                               time.time() - service.rates[pair]['stored'] ,
+                         ))
+        c = self.s.websocket()
+        c.connect()
+        try:
+            ioloop.IOLoop.instance().start()
+        except KeyboardInterrupt:
+            c.close()
 
 if __name__ == '__main__':
-    main()
+    t = TestBl3p()
+    unittest.main()
