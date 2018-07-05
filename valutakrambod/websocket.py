@@ -40,9 +40,10 @@ class WebSocketClient(object):
                                          connect_timeout=self.connect_timeout,
                                          request_timeout=self.request_timeout,
                                          headers=headers)
-        ws_conn = websocket.WebSocketClientConnection(ioloop.IOLoop.current(),
-                                                      request)
-        ws_conn.connect_future.add_done_callback(self._connect_callback)
+        ws_conn = websocket.websocket_connect(request,
+                                              io_loop=ioloop.IOLoop.current(),
+                                              callback=self._connect_callback,
+                                              on_message_callback=self._on_message)
 
     def send(self, data):
         """Send message to the server
