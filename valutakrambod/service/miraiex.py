@@ -2,6 +2,7 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+from valutakrambod.services import Orderbook
 from valutakrambod.services import Service
 
 class MiraiEx(Service):
@@ -24,6 +25,28 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
     def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
+        #self.fetchMarkets(pairs)
+        self.fetchOrderbooks(pairs)
+
+    def fetchOrderbooks(self, pairs):
+        for pair in pairs:
+            o = Orderbook()
+            url = "%smarkets/%s%s/depth" % (self.baseurl, pair[0], pair[1])
+            #print(url)
+            j, r = self._jsonget(url)
+            #print(j)
+            for side in ('asks', 'bids'):
+                oside = {
+                    'asks' : o.SIDE_ASK,
+                    'bids' : o.SIDE_BID,
+                }[side]
+                for order in j[side]:
+                    #print("Updating %s", (side, order))
+                    o.update(oside, float(order[0]), float(order[1]))
+                #print(o)
+            self.updateOrderbook(pair, o)
+
+    def fetchMarkets(self, pairs):
         url = "%smarkets" % self.baseurl
         #print(url)
         j, r = self._jsonget(url)
