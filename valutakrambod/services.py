@@ -67,14 +67,25 @@ class Service(object):
         self.subscribers.append(callback)
     def updateRates(self, pair, ask, bid, when):
         now = time.time()
-        self.rates[pair] = {
-            'ask':  ask,
-            'bid':  bid,
-            'when': when,
-            'stored': now,
-        }
-        for s in self.subscribers:
-            s(self, pair)
+        changed = True
+        if pair in self.rates:
+            old = self.rates[pair]
+            if old['ask'] == ask and old['bid'] == bid and old['when'] == when:
+                changed = False
+            if when is not None and old['when'] is not None and old['when'] > when:
+                raise Exception('%s received old update (%.1f < %.1f)' %
+                                (self.servicename(), when, old['when']))
+        if changed:
+            self.rates[pair] = {
+                'ask':  ask,
+                'bid':  bid,
+                'when': when,
+                'stored': now,
+            }
+            for s in self.subscribers:
+                s(self, pair)
+        else:
+            self.rates[pair]['stored'] = now
 #        self.stats(pair)
 
     def updateOrderbook(self, pair, book):
