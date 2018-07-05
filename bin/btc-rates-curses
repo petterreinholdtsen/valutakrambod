@@ -139,6 +139,8 @@ class CursesViewer(object):
             c.close()
 
 class dummyCurses(object):
+    def clear(self):
+        pass
     def addstr(self, x, y, s):
         s = s.rstrip()
         if "" != s:
