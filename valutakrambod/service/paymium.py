@@ -2,6 +2,8 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+import unittest
+
 from valutakrambod.services import Service
 
 
@@ -39,12 +41,17 @@ https://github.com/Paymium/api-documentation/#ticker
             res[p] = self.rates[p]
         return res
 
-def main():
+class TestPaymium(unittest.TestCase):
     """
-Run simple self test.
+Run simple self test of the Paymium service class.
 """
-    s = Paymium()
-    print(s.currentRates())
+    def setUp(self):
+        self.s = Paymium()
+    def testFetchTicker(self):
+        res = self.s.fetchRates()
+        for pair in self.s.ratepairs():
+            self.assertTrue(pair in res)
 
 if __name__ == '__main__':
-    main()
+    t = TestPaymium()
+    unittest.main()
