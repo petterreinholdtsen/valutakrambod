@@ -4,6 +4,7 @@
 
 import json
 import time
+import unittest
 
 from tornado import ioloop
 
@@ -118,24 +119,38 @@ the websocket API.
     def websocket(self):
         return self.WSClient(self)
 
-def main():
+class TestBitstamp(unittest.TestCase):
     """
 Run simple self test.
 """
-    s = Bitstamp()
-    print(s.currentRates())
+    def setUp(self):
+        self.s = Bitstamp()
+    def testCurrentRates(self):
+        res = self.s.currentRates()
+        pairs = self.s.ratepairs()
+        for pair in pairs:
+            self.assertTrue(pair in res)
+            ask = res[pair]['ask']
+            bid = res[pair]['bid']
+            self.assertTrue(ask >= bid)
+    def testWebsocket(self):
+        """Test websocket subscription of updates.
 
-    s.subscribe(lambda service, pair: print(pair,
-                                            service.rates[pair]['ask'],
-                                            service.rates[pair]['bid'],
-                                            time.time() - service.rates[pair]['stored'],
-    ))
-    c = s.websocket()
-    c.connect()
-    try:
-        ioloop.IOLoop.instance().start()
-    except KeyboardInterrupt:
-        c.close()
+        """
+        def printUpdate(service, pair):
+            print(pair,
+                  service.rates[pair]['ask'],
+                  service.rates[pair]['bid'],
+                  time.time() - service.rates[pair]['when'] ,
+                  time.time() - service.rates[pair]['stored'] ,
+            )
+        #self.s.subscribe(printUpdate)
+        c = self.s.websocket()
+        c.connect()
+        io_loop = ioloop.IOLoop.instance()
+        io_loop.call_later(10, io_loop.stop)
+        io_loop.start()
 
 if __name__ == '__main__':
-    main()
+    t = TestBitstamp()
+    unittest.main()
