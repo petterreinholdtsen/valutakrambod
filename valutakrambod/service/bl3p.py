@@ -100,23 +100,22 @@ Run simple self test.
         ask = res[pair]['ask']
         bid = res[pair]['bid']
         self.assertTrue(ask >= bid)
-    def FIXMEtestWebsocket(self):
-        """Test websocket support.  No idea how to terminate it automatically,
-so not running by default.
+    def testWebsocket(self):
+        """Test websocket subscription of updates.
 
         """
-        self.s.subscribe(lambda service, pair:
-                         print(pair,
-                               service.rates[pair]['ask'],
-                               service.rates[pair]['bid'],
-                               time.time() - service.rates[pair]['stored'] ,
-                         ))
+        def printUpdate(service, pair):
+            print(pair,
+                  service.rates[pair]['ask'],
+                  service.rates[pair]['bid'],
+                  time.time() - service.rates[pair]['stored'] ,
+            )
+        self.s.subscribe(printUpdate)
         c = self.s.websocket()
         c.connect()
-        try:
-            ioloop.IOLoop.instance().start()
-        except KeyboardInterrupt:
-            c.close()
+        io_loop = ioloop.IOLoop.instance()
+        io_loop.call_later(10, io_loop.stop)
+        io_loop.start()
 
 if __name__ == '__main__':
     t = TestBl3p()
