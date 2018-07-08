@@ -24,6 +24,7 @@ class CursesViewer(object):
         self.drawdata()
     def drawdata(self):
         self.stdscr.clear()
+        maxy, maxx = self.stdscr.getmaxyx()
         line = 2
         now = time.time()
         s = "%15s %-6s %-11s %-11s %-5s %4s %6s" % (
@@ -53,9 +54,10 @@ class CursesViewer(object):
             self.stdscr.addstr( line, 0, s)
             line = line + 1
         line = line + 1
-        for when, error in self.errlog[0:10]:
-            self.stdscr.addstr(line, 2, "%.1f %s" % (now - when, error[0:60]))
-            line = line + 1
+        for when, error in self.errlog[-1::-1]:
+            if line < maxy - 1:
+                self.stdscr.addstr(line, 2, "%.1f %s" % (now - when, error[0:maxx-1]))
+                line = line + 1
         self.stdscr.refresh()
         self.considerRefresh()
 
@@ -141,6 +143,8 @@ class CursesViewer(object):
 class dummyCurses(object):
     def clear(self):
         pass
+    def getmaxyx(self):
+        return (9999, 9999)
     def addstr(self, x, y, s):
         s = s.rstrip()
         if "" != s:
