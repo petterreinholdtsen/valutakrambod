@@ -83,7 +83,7 @@ class CursesViewer(object):
             self.stdscr.addstr( 0, 0, ' ' * len(msg))
             self.stdscr.refresh()
         except Exception as e:
-            self.logerror("%s manual fetch: %s" % service.servicename(), str(e))
+            self.logerror("%s manual fetch: %s" % (service.servicename(), str(e)))
             # FIXME flag service as having problems?
     def considerRefresh(self):
         # refresh left behind numbers at least every 60 seconds
