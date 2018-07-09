@@ -24,20 +24,21 @@ class CursesViewer(object):
     def logerror(self, msg):
         now = time.time()
         self.errlog.append((now, msg))
-    def data(self, servicename, pair, askprice, bidprice, stored, created):
-        self.rates[(servicename, pair)] = (askprice, bidprice, stored, created)
+    def data(self, service, pair, askprice, bidprice, stored, created):
+        self.rates[(service.servicename(), pair)] = (service, askprice, bidprice, stored, created)
         self.drawdata()
     def drawdata(self):
         self.stdscr.clear()
         maxy, maxx = self.stdscr.getmaxyx()
         line = 2
         now = time.time()
-        s = "%15s %-6s %-11s %-11s %-5s %4s %6s" % (
-            "Name", "Pair", "Ask", "Bid", "Spr", "", "",
+        s = "%15s %-6s %-11s %-11s %-5s  %4s %6s" % (
+            "Name", "Pair", "Ask", "Bid", "Spr", "Ftcd", "Age",
             )
         self.stdscr.addstr( 1, 0, s)
         for entry in self.rates.keys():
-            (askprice, bidprice, stored, created) = self.rates[entry]
+            (service, askprice, bidprice, stored, created) = self.rates[entry]
+            pair = entry[1]
             if created is not None:
                 age = now - created
             else:
@@ -46,14 +47,14 @@ class CursesViewer(object):
                 spread = (1-bidprice/askprice)*100
             else:
                 spread = float('nan')
-            s = "%15s %s%s %11.4f %11.4f %5.1f %4d %6.f" % (
+            s = "%15s %s%s %11.4f %11.4f %5.1f%% %4d %6.f" % (
                 entry[0],
                 entry[1][0],
                 entry[1][1],
                 askprice,
                 bidprice,
                 spread,
-                now - self.rates[entry][2],
+                now - stored,
                 age,
             )
             self.stdscr.addstr( line, 0, s)
@@ -68,7 +69,8 @@ class CursesViewer(object):
 
     def newdata(self, service, pair):
         self.data(
-            service.servicename(), pair,
+            service,
+            pair,
             service.rates[pair]['ask'],
             service.rates[pair]['bid'],
             service.rates[pair]['stored'],
@@ -128,7 +130,7 @@ class CursesViewer(object):
             if sock:
                 collectors.append(sock)
             for p in rates.keys():
-                self.data(sname,
+                self.data(s,
                           p,
                           rates[p]['ask'],
                           rates[p]['bid'],
