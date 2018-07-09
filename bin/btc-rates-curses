@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 
+import configparser
 import curses
 import optparse
 import time
 
 from curses import wrapper
+from os.path import expanduser
 from sortedcontainers.sorteddict import SortedDict
 from tornado import ioloop
 
@@ -16,6 +18,9 @@ class CursesViewer(object):
         self.lastrequest = {}
         self.errlog = []
         self.currencies = currencies
+        configpath = expanduser('~/.config/btc-rates/config.ini')
+        self.config = configparser.ConfigParser()
+        self.config.read(configpath)
     def logerror(self, msg):
         now = time.time()
         self.errlog.append((now, msg))
@@ -113,6 +118,7 @@ class CursesViewer(object):
         self.services = []
         for e in valutakrambod.service.knownServices():
             s = e()
+            s.confinit(self.config)
             self.services.append(s)
             s.subscribe(self.newdata)
             sname = s.servicename()

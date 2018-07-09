@@ -53,6 +53,23 @@ class Service(object):
         self.rates = {}
         self.orderbooks = {}
         self.subscribers = []
+    def confinit(self, config):
+        """Set a configparser compatible object member for use by individual
+services to store configuration.
+
+        """
+        # require subclass with working servicename() to be able to
+        # set the configuration member.
+        if not config.has_section(self.servicename()):
+            config.add_section(self.servicename())
+        self._config = config
+    def confget(self, key, fallback=None):
+        return self._config.get(self.servicename(), key, fallback=fallback)
+    def confgetint(self, key, fallback=None):
+        return self._config.getint(self.servicename(), key, fallback=fallback)
+    def confset(self, key, value):
+        return self._config.set(self.servicename(), key, value)
+
     def _jsonget(self, url, timeout = 30):
         req = httpclient.HTTPRequest(url,
                           "GET",

@@ -2,10 +2,12 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+import configparser
 import json
 import time
 import unittest
 
+from os.path import expanduser
 from tornado import ioloop
 
 from valutakrambod.services import Orderbook
@@ -125,6 +127,10 @@ Run simple self test.
 """
     def setUp(self):
         self.s = Bitstamp()
+        configpath = expanduser('~/.config/valutakrambod/testsuite.ini')
+        self.config = configparser.ConfigParser()
+        self.config.read(configpath)
+        self.s.confinit(self.config)
     def testCurrentRates(self):
         res = self.s.currentRates()
         pairs = self.s.ratepairs()
