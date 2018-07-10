@@ -90,8 +90,9 @@ services to store configuration.
             if old['ask'] == ask and old['bid'] == bid and old['when'] == when:
                 changed = False
             if when is not None and old['when'] is not None and old['when'] > when:
-                raise Exception('%s received old update (%.1f < %.1f)' %
-                                (self.servicename(), when, old['when']))
+                raise Exception('received old update (%.1f < %.1f - %.2f behind)' %
+                                (when, old['when'], old['when'] - when ))
+
         if changed:
             self.rates[pair] = {
                 'ask':  ask,
