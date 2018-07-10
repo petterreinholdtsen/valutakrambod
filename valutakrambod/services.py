@@ -49,11 +49,24 @@ class Orderbook(object):
         return "Ask: " + self.ask.__str__() + "\nBid: " + self.bid.__str__()
 
 class Service(object):
-    def __init__(self):
+    def __init__(self, currencies=None):
         self.http_client = httpclient.HTTPClient()
         self.rates = {}
         self.orderbooks = {}
         self.subscribers = []
+        self.currencies = currencies
+        self.wantedpairs = None
+        self.periodic = None
+        if currencies:
+            for p in self.ratepairs():
+                #print(p, currencies)
+                if p[0] in currencies and p[1] in currencies:
+                    #print("match")
+                    if self.wantedpairs is None:
+                        self.wantedpairs = []
+                    self.wantedpairs.append(p)
+        #print("Want", self.wantedpairs)
+
     def confinit(self, config):
         """Set a configparser compatible object member for use by individual
 services to store configuration.
@@ -190,15 +203,14 @@ is such that such that
 This method must be implemented in each service.
 
         """
-    def currentRates(self, pairs = None):
         if {} == self.rates:
-            self.fetchRates(pairs)
-        if pairs is None:
+            self.fetchRates(self.wantedpairs)
+        if self.wantedpairs is None:
             return self.rates
         else:
             res = {}
             #print(pairs)
-            for p in pairs:
+            for p in self.wantedpairs:
                 res[p] = self.rates[p]
             return res
 

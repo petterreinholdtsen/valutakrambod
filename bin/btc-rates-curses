@@ -82,7 +82,7 @@ class CursesViewer(object):
             msg = "Updating %s" % service.servicename()
             self.stdscr.addstr( 0, 0, msg)
             self.stdscr.refresh()
-            service.fetchRates(service.rates.keys())
+            service.fetchRates(service.wantedpairs)
             self.stdscr.addstr( 0, 0, ' ' * len(msg))
             self.stdscr.refresh()
         except Exception as e:

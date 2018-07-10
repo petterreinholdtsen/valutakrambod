@@ -43,7 +43,7 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
                     'bids' : o.SIDE_BID,
                 }[side]
                 for order in j[side]:
-                    #print("Updating %s", (side, order))
+                    #print("Updating %s for %s", (side, pair), order)
                     o.update(oside, float(order[0]), float(order[1]))
                 #print(o)
             self.updateOrderbook(pair, o)
@@ -83,11 +83,11 @@ class TestMiraiEx(unittest.TestCase):
         asks = {}
         bids = {}
         #print(self.s.fetchOrderbooks(self.s.wantedpairs))
-        for pair in self.s.ratepairs():
+        for pair in self.s.wantedpairs:
             asks[pair] = self.s.rates[pair]['ask']
             bids[pair] = self.s.rates[pair]['bid']
         #print(self.s.fetchRates(self.s.wantedpairs))
-        for pair in self.s.ratepairs():
+        for pair in self.s.wantedpairs:
             if asks[pair] != self.s.rates[pair]['ask']:
                 print("ask order book (%.1f and ticker (%.1f) differ for %s" % (
                     asks[pair],
@@ -106,7 +106,7 @@ class TestMiraiEx(unittest.TestCase):
         self.s = MiraiEx()
         self.s.currentRates()
     def testConnection(self):
-        for pair in self.s.ratepairs():
+        for pair in self.s.wantedpairs:
             self.assertTrue(pair in self.s.rates)
 
 if __name__ == '__main__':
