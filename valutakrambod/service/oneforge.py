@@ -3,9 +3,12 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 
+import configparser
 import dateutil
 import datetime
+import unittest
 
+from os.path import expanduser
 from pytz import UTC
 
 from valutakrambod.services import Service
@@ -26,16 +29,15 @@ https://1forge.com/forex-data-api .
             ('USD', 'EUR'),
             ('USD', 'NOK'),
             ]
-    def setAPIkey(self, apikey):
-        self.apikey = apikey
     def fetchRates(self, pairs = None):
-        if not hasattr(self, 'apikey'):
+        apikey = self.confget('apikey', fallback=None)
+        if apikey is None:
             raise Exception('1Forge require API key')
         if pairs is None:
             pairs = self.ratepairs()
         #print(pairs)
         pairstr = ','.join(map(lambda t: "%s%s" % (t[0], t[1]), pairs))
-        url = "%squotes?pairs=%s&api_key=%s" % (self.baseurl, pairstr, self.apikey)
+        url = "%squotes?pairs=%s&api_key=%s" % (self.baseurl, pairstr, apikey)
         #print(url)
         j, r = self._jsonget(url)
         #print(j)
@@ -56,12 +58,21 @@ https://1forge.com/forex-data-api .
         """Websocket API not yet implemented 2018-07-03."""
         return None
 
-def main():
+class TestOneForge(unittest.TestCase):
     """
 Run simple self test.
 """
-    s = OneForge()
-    print(s.currentRates())
+    def setUp(self):
+        self.s = OneForge(['BTC', 'EUR', 'NOK', 'USD'])
+        configpath = expanduser('~/.config/valutakrambod/testsuite.ini')
+        self.config = configparser.ConfigParser()
+        self.config.read(configpath)
+        self.s.confinit(self.config)
+    def testFetchTicker(self):
+        res = self.s.fetchRates()
+        for pair in self.s.ratepairs():
+            self.assertTrue(pair in res)
 
 if __name__ == '__main__':
-    main()
+    t = TestOneForge()
+    unittest.main()
