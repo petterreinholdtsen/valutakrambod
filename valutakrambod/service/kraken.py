@@ -76,7 +76,7 @@ https://www.kraken.com/help/api#general-usage .
             j, r = self._jsonget(url)
             #print(j)
             if 0 != len(j['error']):
-                raise Error(j['error'])
+                raise Exception(j['error'])
             ask = float(j['result'][pair]['a'][0])
             bid = float(j['result'][pair]['b'][0])
             self.updateRates(p, ask, bid, None)
