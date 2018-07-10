@@ -28,6 +28,8 @@ class CursesViewer(object):
     def data(self, service, pair, askprice, bidprice, stored, created):
         self.rates[(service.servicename(), pair)] = (service, askprice, bidprice, stored, created)
         self.drawdata()
+        self.considerNewPeriod(service)
+
     def drawdata(self):
         self.stdscr.clear()
         maxy, maxx = self.stdscr.getmaxyx()
@@ -48,7 +50,8 @@ class CursesViewer(object):
                 spread = (1-bidprice/askprice)*100
             else:
                 spread = float('nan')
-            s = "%15s %s%s %11.4f %11.4f %5.1f%% %4d %6.f" % (
+            period = service.guessperiod()
+            s = "%15s %s%s %11.4f %11.4f %5.1f%% %4d %6.f %6.f" % (
                 entry[0],
                 pair[0],
                 pair[1],
@@ -57,6 +60,7 @@ class CursesViewer(object):
                 spread,
                 now - stored,
                 age,
+                period,
             )
             self.stdscr.addstr( line, 0, s)
             line = line + 1
@@ -66,7 +70,6 @@ class CursesViewer(object):
                 self.stdscr.addstr(line, 2, "%.1f %s" % (now - when, error[0:maxx-1]))
                 line = line + 1
         self.stdscr.refresh()
-        self.considerRefresh()
 
     def newdata(self, service, pair):
         self.data(
@@ -88,32 +91,22 @@ class CursesViewer(object):
         except Exception as e:
             self.logerror("%s manual fetch: %s" % (service.servicename(), str(e)))
             # FIXME flag service as having problems?
-    def considerRefresh(self):
-        # refresh left behind numbers at least every 60 seconds
-        refreshtime = 60
-        mindelay = 30
-        now = time.time()
-        for service in self.services:
-            update = False
-            if service in self.lastrequest:
-                lastupdatereq = self.lastrequest[service]
-            else:
-                lastupdatereq = 0
-            for pair in service.rates.keys():
-                if service.rates[pair]['when'] is not None:
-                    refreshtime = (now - service.rates[pair]['when']) / 2
-                else:
-                    refreshtime = 60
-                if refreshtime > 15*60: # max 15 minutes between each refresh
-                    refreshtime = 15*60
-                if service.rates[pair]['stored'] + mindelay < now:
-                    update = True
-            if update and lastupdatereq + refreshtime < now:
-                #print("request callback for %s" % service.servicename())
-                self.ioloop.spawn_callback(self.runRefresh, service)
-                self.lastrequest[service] = now
-                break
-
+    def considerNewPeriod(self, service):
+        """Change update period, if it far from the current period and not too
+short.
+        """
+        period = service.guessperiod()
+        if period is not float('nan'):
+            if period > 20 and \
+               abs(service.periodic.callback_time/1000 - (period/2)) > 5:
+              if False:
+                self.logerror("Change %s period from %.1f (%1.f) to %.1f" % (
+                    service.servicename(),
+                    service.periodic.callback_time/1000,
+                    abs(service.periodic.callback_time/1000 - (period/2)),
+                    period/2,
+                ))
+                service.periodicUpdate(period / 2)
     def run(self, stdscr):
         self.stdscr = stdscr
         self.stdscr.clear()

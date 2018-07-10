@@ -2,7 +2,9 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+import collections
 import json
+import statistics
 import time
 from operator import neg
 
@@ -54,6 +56,7 @@ class Service(object):
         self.rates = {}
         self.orderbooks = {}
         self.subscribers = []
+        self.updates = collections.deque(maxlen=10)
         self.currencies = currencies
         self.wantedpairs = None
         self.periodic = None
@@ -131,6 +134,8 @@ seconds specified in as an argument.  The default update frequency is
                 s(self, pair)
         else:
             self.rates[pair]['stored'] = now
+        if when and (0 == len(self.updates) or when != self.updates[-1]):
+            self.updates.append(when)
 #        self.stats(pair)
 
     def updateOrderbook(self, pair, book):
@@ -139,6 +144,21 @@ seconds specified in as an argument.  The default update frequency is
                          book.ask.peekitem(0)[0],
                          book.bid.peekitem(0)[0],
                          book.lastupdate)
+    def guessperiod(self):
+        last = None
+        steps = []
+        for t in self.updates:
+            if last:
+                steps.append(t - last)
+            last = t
+        if 1 < len(steps):
+            now = time.time()
+            period = statistics.median(steps)
+#            print("Guess next update for %s is %.1f %.1f (%f)" %
+#                  (self.servicename(), t + period, t + period - now, period))
+            return period
+        else:
+            return float('nan')
 
     def stats(self, pair):
         print(pair,
