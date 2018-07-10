@@ -2,6 +2,7 @@
 
 import configparser
 import curses
+import functools
 import optparse
 import time
 
@@ -115,31 +116,26 @@ class CursesViewer(object):
 
     def run(self, stdscr):
         self.stdscr = stdscr
+        self.stdscr.clear()
         self.ioloop = ioloop.IOLoop.instance()
         collectors = []
         self.services = []
         for e in valutakrambod.service.knownServices():
-            s = e()
-            s.confinit(self.config)
-            self.services.append(s)
-            s.subscribe(self.newdata)
-            sname = s.servicename()
-            self.runRefresh(s)
-            rates = s.currentRates()
-            sock = s.websocket()
+            service = e(self.currencies)
+
+            msg = "Enabling %s" % service.servicename()
+            self.stdscr.addstr( 0, 0, msg)
+            self.stdscr.refresh()
+
+            service.confinit(self.config)
+            self.services.append(service)
+            service.subscribe(self.newdata)
+            service.periodicUpdate(60)
+            sock = service.websocket()
             if sock:
                 collectors.append(sock)
-            for p in rates.keys():
-                self.data(s,
-                          p,
-                          rates[p]['ask'],
-                          rates[p]['bid'],
-                          rates[p]['stored'],
-                          rates[p]['when'],
-                )
-
-        for c in collectors:
-            c.connect()
+                sock.connect()
+            self.ioloop.add_callback(functools.partial(self.runRefresh, service))
 
         try:
             self.ioloop.start()
