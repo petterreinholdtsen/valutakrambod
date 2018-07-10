@@ -2,6 +2,8 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+import unittest
+
 from valutakrambod.services import Service
 
 class Coinbase(Service):
@@ -12,6 +14,8 @@ class Coinbase(Service):
     def ratepairs(self):
         return [
             ('BTC', 'NOK'),
+            ('BTC', 'EUR'),
+            ('BTC', 'USD'),
             ]
     
     def fetchRates(self, pairs = None):
@@ -37,12 +41,20 @@ class Coinbase(Service):
         """Coinbase do not provide websocket API 2018-06-27."""
         return None
 
-def main():
+class TestCoinbase(unittest.TestCase):
     """
 Run simple self test.
 """
-    s = Coinbase()
-    print(s.currentRates())
+    def setUp(self):
+        self.s = Coinbase()
+    def testCurrentRates(self):
+        res = self.s.currentRates()
+        for pair in self.s.ratepairs():
+            self.assertTrue(pair in res)
+            ask = res[pair]['ask']
+            bid = res[pair]['bid']
+            self.assertTrue(ask >= bid)
 
 if __name__ == '__main__':
-    main()
+    t = TestCoinbase()
+    unittest.main()
