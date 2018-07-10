@@ -8,6 +8,7 @@ from operator import neg
 
 from sortedcontainers.sorteddict import SortedDict
 from tornado import httpclient
+import tornado.ioloop
 
 class Orderbook(object):
     SIDE_ASK = "ask"
@@ -82,6 +83,19 @@ services to store configuration.
         raise NotImplementedError()
     def subscribe(self, callback):
         self.subscribers.append(callback)
+    def periodicUpdate(self, mindelay = 30): # 30 seconds
+        """Start periodic calls to fetchRates(), with the minimum delay in
+seconds specified in as an argument.  The default update frequency is
+30 seconds.
+
+        """
+        if self.periodic is not None:
+            self.periodic.stop()
+        if -1 != mindelay:
+            self.periodic =  tornado.ioloop.PeriodicCallback(self.fetchRates,
+                                                             mindelay * 1000)
+            self.periodic.start()
+
     def updateRates(self, pair, ask, bid, when):
         now = time.time()
         changed = True
