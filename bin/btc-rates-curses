@@ -135,7 +135,9 @@ class CursesViewer(object):
             if sock:
                 collectors.append(sock)
                 sock.connect()
-            self.ioloop.add_callback(functools.partial(self.runRefresh, service))
+            # Schedule initial updates, one second apart
+            self.ioloop.call_later(len(self.services),
+                                   functools.partial(self.runRefresh, service))
 
         try:
             self.ioloop.start()
