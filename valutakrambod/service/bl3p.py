@@ -50,10 +50,6 @@ https://bl3p.eu/api .
         return res
 
     class WSClient(WebSocketClient):
-        _marketmap = {
-            'BTCEUR' : ('BTC', 'EUR'),
-            'LTCEUR' : ('LTC', 'EUR'),
-        }
         def __init__(self, service):
             super().__init__()
             self.service = service
@@ -79,7 +75,8 @@ https://bl3p.eu/api .
             # timestamp from the source.  Asked bl3p to set one in
             # email sent 2018-06-27.
             #o.setupdated(time.time())
-            self.service.updateOrderbook(self._marketmap[m['marketplace']], o)
+            pair = (m['marketplace'][:3], m['marketplace'][3:])
+            self.service.updateOrderbook(pair, o)
         def _on_connection_close(self):
             pass
         def _on_connection_error(self, exception):
