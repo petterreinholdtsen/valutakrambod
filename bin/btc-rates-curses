@@ -50,8 +50,8 @@ class CursesViewer(object):
                 spread = float('nan')
             s = "%15s %s%s %11.4f %11.4f %5.1f%% %4d %6.f" % (
                 entry[0],
-                entry[1][0],
-                entry[1][1],
+                pair[0],
+                pair[1],
                 askprice,
                 bidprice,
                 spread,
