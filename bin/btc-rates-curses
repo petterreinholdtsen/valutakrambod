@@ -19,6 +19,7 @@ class CursesViewer(object):
         self.lastrequest = {}
         self.errlog = []
         self.currencies = currencies
+        self.streamcollectors = {}
         configpath = expanduser('~/.config/btc-rates/config.ini')
         self.config = configparser.ConfigParser()
         self.config.read(configpath)
@@ -89,7 +90,7 @@ class CursesViewer(object):
             self.stdscr.addstr( 0, 0, ' ' * len(msg))
             self.stdscr.refresh()
         except Exception as e:
-            self.logerror("%s manual fetch: %s" % (service.servicename(), str(e)))
+            self.logerror("%s fetch: %s" % (service.servicename(), str(e)))
             # FIXME flag service as having problems?
     def considerNewPeriod(self, service):
         """Change update period, if it far from the current period and not too
@@ -111,7 +112,6 @@ short.
         self.stdscr = stdscr
         self.stdscr.clear()
         self.ioloop = ioloop.IOLoop.instance()
-        collectors = []
         self.services = []
         for e in valutakrambod.service.knownServices():
             service = e(self.currencies)
@@ -123,20 +123,26 @@ short.
             service.confinit(self.config)
             self.services.append(service)
             service.subscribe(self.newdata)
-            service.periodicUpdate(60)
             sock = service.websocket()
             if sock:
-                collectors.append(sock)
+                self.streamcollectors[service] = sock
                 sock.connect()
-            # Schedule initial updates, one second apart
-            self.ioloop.call_later(len(self.services),
-                                   functools.partial(self.runRefresh, service))
+            else:
+                # For non-streaming services, schedule initial updates, one second apart
+                self.ioloop.call_later(len(self.services),
+                                       functools.partial(self.runRefresh, service))
+                # Schedule initial updates, one second apart
+                service.periodicUpdate(60)
 
+        # Make sure to update at least ever 5 seconds if nothing happen elsewhere.
+        import tornado.ioloop
+        self.regular =  tornado.ioloop.PeriodicCallback(self.drawdata, 5 * 1000)
+        self.regular.start()
         try:
             self.ioloop.start()
         except KeyboardInterrupt:
             pass
-        for c in collectors:
+        for s, c in self.streamcollectors.items():
             c.close()
 
 class dummyCurses(object):
