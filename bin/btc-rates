@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import valutakrambod
+import valutakrambod.client
 
 if __name__ == '__main__':
-    valutakrambod.BTCrates()
+    valutakrambod.client.BTCrates()
