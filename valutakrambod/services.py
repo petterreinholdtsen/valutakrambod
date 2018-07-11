@@ -50,6 +50,22 @@ class Orderbook(object):
     def __str__(self):
         return "Ask: " + self.ask.__str__() + "\nBid: " + self.bid.__str__()
 
+class Trading(object):
+    def __init__(self, service):
+        self.service = service
+    def balance(self):
+        raise NotImplementedError()
+    def placeorder(self, marketpair, side, price, volume, immediate=False):
+        raise NotImplementedError()
+    def cancelorder(self, orderref):
+        raise NotImplementedError()
+    def cancelallorders(self):
+        raise NotImplementedError()
+    def orders(self, market= None):
+        raise NotImplementedError()
+    def estimatefee(self, side, price, volume):
+        return 0.0
+
 class Service(object):
     def __init__(self, currencies=None):
         self.http_client = httpclient.HTTPClient()
@@ -60,6 +76,7 @@ class Service(object):
         self.currencies = currencies
         self.wantedpairs = None
         self.periodic = None
+        self.trader = None
         if currencies:
             for p in self.ratepairs():
                 #print(p, currencies)
@@ -95,6 +112,10 @@ services to store configuration.
         response = self.http_client.fetch(req)
         j = json.loads(response.body.decode('UTF-8'))
         return j, response
+    def _post(self, url, body = "", headers = None):
+        req = httpclient.HTTPRequest(url, "POST", body=body, headers=headers)
+        response = self.http_client.fetch(req)
+        return response.body, response
     def servicename(self):
         raise NotImplementedError()
     def subscribe(self, callback):
@@ -240,6 +261,12 @@ This method must be implemented in each service.
     def websocket(self):
         """Return a websocket client object.  Return None if no websocket API
 is available.
+
+        """
+        return None
+    def trading(self):
+        """Returning a trading client object.  Return None if trading is not
+available.
 
         """
         return None
