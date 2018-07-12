@@ -151,10 +151,10 @@ seconds specified in as an argument.  The default update frequency is
                 'when': when,
                 'stored': now,
             }
-            for s in self.subscribers:
-                s(self, pair)
         else:
             self.rates[pair]['stored'] = now
+        for s in self.subscribers:
+            s(self, pair)
         if when and (0 == len(self.updates) or when != self.updates[-1]):
             self.updates.append(when)
 #        self.stats(pair)
