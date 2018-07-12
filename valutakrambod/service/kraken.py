@@ -13,7 +13,6 @@ import urllib
 
 from os.path import expanduser
 
-from valutakrambod.hmacsig import hmac_sha512_sig
 from valutakrambod.services import Orderbook
 from valutakrambod.services import Service
 from valutakrambod.services import Trading
