@@ -26,10 +26,10 @@ class CursesViewer(object):
     def logerror(self, msg):
         now = time.time()
         self.errlog.append((now, msg))
-    def data(self, service, pair, askprice, bidprice, stored, created):
-        self.rates[(service.servicename(), pair)] = (service, askprice, bidprice, stored, created)
+    def data(self, service, pair, askprice, bidprice, stored, created, lastchange):
+        self.rates[(service.servicename(), pair)] = (service, askprice, bidprice, stored, created, lastchange)
         self.drawdata()
-        self.considerNewPeriod(service)
+        self.considerNewPeriod(service, pair)
 
     def drawdata(self):
         self.stdscr.clear()
@@ -41,7 +41,7 @@ class CursesViewer(object):
             )
         self.stdscr.addstr( 1, 0, s)
         for entry in self.rates.keys():
-            (service, askprice, bidprice, stored, created) = self.rates[entry]
+            (service, askprice, bidprice, stored, created, lastchange) = self.rates[entry]
             pair = entry[1]
             if created is not None:
                 age = now - created
@@ -51,7 +51,7 @@ class CursesViewer(object):
                 spread = (1-bidprice/askprice)*100
             else:
                 spread = float('nan')
-            period = service.guessperiod()
+            period = service.guessperiod(pair)
             s = "%15s %s%s %11.4f %11.4f %5.1f%% %4d %6.f %6.f" % (
                 entry[0],
                 pair[0],
@@ -72,7 +72,7 @@ class CursesViewer(object):
                 line = line + 1
         self.stdscr.refresh()
 
-    def newdata(self, service, pair):
+    def newdata(self, service, pair, changed):
         self.data(
             service,
             pair,
@@ -80,6 +80,7 @@ class CursesViewer(object):
             service.rates[pair]['bid'],
             service.rates[pair]['stored'],
             service.rates[pair]['when'],
+            service.rates[pair]['lastchange'],
         )
     def runRefresh(self, service):
         try:
@@ -92,11 +93,11 @@ class CursesViewer(object):
         except Exception as e:
             self.logerror("%s fetch: %s" % (service.servicename(), str(e)))
             # FIXME flag service as having problems?
-    def considerNewPeriod(self, service):
+    def considerNewPeriod(self, service, pair):
         """Change update period, if it far from the current period and not too
 short.
         """
-        period = service.guessperiod()
+        period = service.guessperiod(pair)
         if period is not float('nan'):
             if period > 20 and \
                abs(service.periodic.callback_time/1000 - (period/2)) > 5:

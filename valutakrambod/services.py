@@ -72,7 +72,7 @@ class Service(object):
         self.rates = {}
         self.orderbooks = {}
         self.subscribers = []
-        self.updates = collections.deque(maxlen=10)
+        self.updates = {}
         self.currencies = currencies
         self.wantedpairs = None
         self.periodic = None
@@ -145,18 +145,27 @@ seconds specified in as an argument.  The default update frequency is
                                 (when, old['when'], old['when'] - when ))
 
         if changed:
+            if when:
+                lastchange = when
+            else:
+                lastchange = now
             self.rates[pair] = {
                 'ask':  ask,
                 'bid':  bid,
                 'when': when,
                 'stored': now,
+                'lastchange': lastchange,
             }
         else:
             self.rates[pair]['stored'] = now
+            lastchange = self.rates[pair]['lastchange']
         for s in self.subscribers:
-            s(self, pair)
-        if when and (0 == len(self.updates) or when != self.updates[-1]):
-            self.updates.append(when)
+            s(self, pair, changed)
+        if not pair in self.updates:
+            self.updates[pair] = collections.deque(maxlen=10)
+        if  lastchange and (0 == len(self.updates[pair]) or \
+                            lastchange != self.updates[pair][-1]):
+            self.updates[pair].append(lastchange)
 #        self.stats(pair)
 
     def updateOrderbook(self, pair, book):
@@ -165,10 +174,12 @@ seconds specified in as an argument.  The default update frequency is
                          book.ask.peekitem(0)[0],
                          book.bid.peekitem(0)[0],
                          book.lastupdate)
-    def guessperiod(self):
+    def guessperiod(self, pair):
+        if pair not in self.updates:
+            return float('nan')
         last = None
         steps = []
-        for t in self.updates:
+        for t in self.updates[pair]:
             if last:
                 steps.append(t - last)
             last = t
