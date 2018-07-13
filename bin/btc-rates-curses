@@ -94,9 +94,12 @@ class CursesViewer(object):
             self.logerror("%s fetch: %s" % (service.servicename(), str(e)))
             # FIXME flag service as having problems?
     def considerNewPeriod(self, service, pair):
-        """Change update period, if it far from the current period and not too
-short.
+        """Change update period for those doing periodic updates, if it far
+from the current period and not too short.
+
         """
+        if service.periodic is None:
+            return
         period = service.guessperiod(pair)
         if period is not float('nan'):
             if period > 20 and \
