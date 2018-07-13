@@ -136,7 +136,7 @@ from the current period and not too short.
                 # For non-streaming services, schedule initial updates, one second apart
                 self.ioloop.call_later(len(self.services),
                                        functools.partial(self.runRefresh, service))
-                # Schedule initial updates, one second apart
+                # And do regular updates too
                 service.periodicUpdate(60)
 
         # Make sure to update at least ever 5 seconds if nothing happen elsewhere.
