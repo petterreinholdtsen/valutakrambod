@@ -76,7 +76,7 @@ class Service(object):
         self.currencies = currencies
         self.wantedpairs = None
         self.periodic = None
-        self.trader = None
+        self.activetrader = None
         if currencies:
             for p in self.ratepairs():
                 #print(p, currencies)
@@ -289,4 +289,4 @@ is available.
 available.
 
         """
-        return None
+        return self.activetrader
