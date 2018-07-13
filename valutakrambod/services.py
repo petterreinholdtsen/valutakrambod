@@ -86,6 +86,12 @@ class Service(object):
                         self.wantedpairs = []
                     self.wantedpairs.append(p)
         #print("Want", self.wantedpairs)
+        self.errsubscribers = []
+    def errsubscribe(self, callback):
+        self.errsubscribers.append(callback)
+    def logerror(self, msg):
+        for s in self.errsubscribers:
+            s(self, msg)
 
     def confinit(self, config):
         """Set a configparser compatible object member for use by individual

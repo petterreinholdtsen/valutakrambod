@@ -51,8 +51,7 @@ https://bl3p.eu/api .
 
     class WSClient(WebSocketClient):
         def __init__(self, service):
-            super().__init__()
-            self.service = service
+            super().__init__(service)
             self.url = "wss://api.bl3p.eu/1/BTCEUR/orderbook"
         def connect(self, url = None):
             if url is None:

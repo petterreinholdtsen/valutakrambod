@@ -56,9 +56,8 @@ Query the Hitbtc API.
     class WSClient(WebSocketClient):
         epoch = datetime.datetime(1970, 1, 1, tzinfo=UTC)
         def __init__(self, service):
-            super().__init__()
+            super().__init__(service)
             self.url = "wss://api.hitbtc.com/api/2/ws"
-            self.service = service
         def connect(self, url = None):
             if url is None:
                 url = self.url

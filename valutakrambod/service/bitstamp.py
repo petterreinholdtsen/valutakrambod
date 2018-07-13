@@ -84,9 +84,8 @@ the websocket API.
             'order_book_eurusd',
         ]
         def __init__(self, service):
-            super().__init__()
+            super().__init__(service)
             self.url = "wss://ws.pusherapp.com/app/de504dc5763aeef9ff52?protocol=6&client=js&version=2.1.2&flash=false"
-            self.service = service
         def connect(self, url = None):
             if url is None:
                 url = self.url

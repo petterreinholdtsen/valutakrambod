@@ -127,6 +127,7 @@ from the current period and not too short.
             service.confinit(self.config)
             self.services.append(service)
             service.subscribe(self.newdata)
+            service.errsubscribe(self.logerror)
             sock = service.websocket()
             if sock:
                 self.streamcollectors[service] = sock

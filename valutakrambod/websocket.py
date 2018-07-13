@@ -23,10 +23,11 @@ class WebSocketClient(object):
     """Base for web socket clients.
     """
  
-    def __init__(self, *,
+    def __init__(self, service, *,
                  connect_timeout=DEFAULT_CONNECT_TIMEOUT,
                  request_timeout=DEFAULT_REQUEST_TIMEOUT):
 
+        self.service = service
         self.connect_timeout = connect_timeout
         self.request_timeout = request_timeout
 
@@ -79,7 +80,12 @@ class WebSocketClient(object):
                 self._on_connection_close()
                 break
 
-            self._on_message(msg)
+            try:
+                self._on_message(msg)
+            except Exception as exception:
+                self.service.logerror("failed handling message for %s: %s" % (
+                    self.service.servicename(), str(exception)
+                ))
 
     def _on_message(self, msg):
         """This is called when new message is available from the server.
@@ -103,5 +109,6 @@ class WebSocketClient(object):
         """This is called in case if connection to the server could
         not established.
         """
-
-        pass
+        self.service.logerror("connection failed for %s: %s" % (
+            self.service.servicename(), str(exception)
+        ))
