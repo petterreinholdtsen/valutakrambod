@@ -129,12 +129,15 @@ services to store configuration.
     def periodicUpdate(self, mindelay = 30): # 30 seconds
         """Start periodic calls to fetchRates(), with the minimum delay in
 seconds specified in as an argument.  The default update frequency is
-30 seconds.
+30 seconds.  To disable periodic updates, use mindelay=0.
+
 
         """
+        if mindelay < 0:
+            raise ValueError('mindelay must be a positive number or zero')
         if self.periodic is not None:
             self.periodic.stop()
-        if -1 != mindelay:
+        if 0 != mindelay:
             self.periodic =  tornado.ioloop.PeriodicCallback(self.fetchRates,
                                                              mindelay * 1000)
             self.periodic.start()
