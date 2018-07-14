@@ -3,6 +3,7 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import unittest
+import time
 
 from valutakrambod.services import Service
 
@@ -50,13 +51,27 @@ Run simple self test.
         self.s = Bitmynt()
     def testCurrentRates(self):
         res = self.s.currentRates()
-        pair = ('BTC', 'NOK')
-        self.assertTrue(pair in res)
-        ask = res[pair]['ask']
-        bid = res[pair]['bid']
-        self.assertTrue(ask >= bid)
-        spread = 100*(ask/bid-1)
-        self.assertTrue(spread > 0 and spread < 5)
+        for pair in self.s.ratepairs():
+            self.assertTrue(pair in res)
+            ask = res[pair]['ask']
+            bid = res[pair]['bid']
+            self.assertTrue(ask >= bid)
+            spread = 100*(ask/bid-1)
+            self.assertTrue(spread > 0 and spread < 5)
+    def testUpdates(self):
+        from tornado import ioloop
+        def printUpdate(service, pair, changed):
+            print(pair,
+                  service.rates[pair]['ask'],
+                  service.rates[pair]['bid'],
+                  time.time() - service.rates[pair]['when'],
+                  time.time() - service.rates[pair]['stored'],
+            )
+        self.s.subscribe(printUpdate)
+        self.s.periodicUpdate(3)
+        io_loop = ioloop.IOLoop.instance()
+        io_loop.call_later(10, io_loop.stop)
+        io_loop.start()
 
 if __name__ == '__main__':
     t = TestBitmynt()
