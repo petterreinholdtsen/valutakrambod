@@ -8,6 +8,7 @@ import json
 import time
 from pytz import UTC
 
+from decimal import Decimal
 from tornado import ioloop
 
 from valutakrambod.services import Orderbook
@@ -44,8 +45,8 @@ Query the Hitbtc API.
             #print(url)
             j, r = self._jsonget(url)
             #print(j)
-            ask = float(j['ask'])
-            bid = float(j['bid'])
+            ask = Decimal(j['ask'])
+            bid = Decimal(j['bid'])
             self.updateRates(p, ask, bid, j['timestamp'] / 1000.0)
             res[p] = self.rates[p]
         return res
@@ -99,7 +100,7 @@ Query the Hitbtc API.
                         }[side]
                         #print(m['params'][side])
                         for e in m['params'][side]:
-                            o.update(oside, float(e['price']), float(e['size']))
+                            o.update(oside, Decimal(e['price']), Decimal(e['size']))
                     # FIXME setting our own timestamp, as there is no
                     # timestamp from the source.  Ask bl3p to set one?
                     o.setupdated(time.time())
@@ -113,11 +114,11 @@ Query the Hitbtc API.
                             'bid' : o.SIDE_BID,
                         }[side]
                         for e in m['params'][side]:
-                            price = float(e['price'])
+                            price = Decimal(e['price'])
                             if '0.00' == e['size']:
                                 o.remove(oside, price)
                             else:
-                                volume = float(e['size'])
+                                volume = Decimal(e['size'])
                                 o.update(oside, price, volume)
                     # FIXME setting our own timestamp, as there is no
                     # timestamp from the source.  Ask bl3p to set one?

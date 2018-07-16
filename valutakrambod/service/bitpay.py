@@ -2,6 +2,8 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+from decimal import Decimal
+
 from valutakrambod.services import Service
 
 class Bitpay(Service):
@@ -36,7 +38,7 @@ Documentation is available from https://bitpay.com/api .
             if 'error' in j:
                 raise Error(j['error'])
             buyrate = j['data']['rate']
-            self.updateRates(p, float('nan'), buyrate, None)
+            self.updateRates(p, Decimal('nan'), buyrate, None)
             res[p] = self.rates[p]
         return res
 

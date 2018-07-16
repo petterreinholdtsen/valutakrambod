@@ -4,6 +4,8 @@
 
 import unittest
 
+from decimal import Decimal
+
 from valutakrambod.services import Orderbook
 from valutakrambod.services import Service
 
@@ -44,7 +46,7 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
                 }[side]
                 for order in j[side]:
                     #print("Updating %s for %s", (side, pair), order)
-                    o.update(oside, float(order[0]), float(order[1]))
+                    o.update(oside, Decimal(order[0]), Decimal(order[1]))
                 #print(o)
             self.updateOrderbook(pair, o)
 
@@ -56,11 +58,11 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
         res = {}
         for market in j:
             pair = (market['id'][:3], market['id'][3:])
-            ask = bid = float('nan')
+            ask = bid = Decimal('nan')
             if 'ask' in market and market['ask'] is not None:
-                ask = float(market['ask'])
+                ask = Decimal(market['ask'])
             if 'bid' in market and market['bid'] is not None:
-                bid = float(market['bid'])
+                bid = Decimal(market['bid'])
             #print(pair)
             if pair in pairs:
                 self.updateRates(pair,

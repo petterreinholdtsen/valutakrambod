@@ -4,6 +4,7 @@
 
 import unittest
 
+from decimal import Decimal
 from valutakrambod.services import Service
 
 class Coinbase(Service):
@@ -31,8 +32,8 @@ class Coinbase(Service):
             #print(sj)
             (bj, br) = self._jsonget(buyurl)
             #print(bj)
-            ask = float(bj['data']['amount'])
-            bid = float(sj['data']['amount'])
+            ask = Decimal(bj['data']['amount'])
+            bid = Decimal(sj['data']['amount'])
             self.updateRates(p, ask, bid, None)
             res[p] = self.rates[p]
         return res

@@ -11,6 +11,7 @@ import time
 import unittest
 import urllib
 
+from decimal import Decimal
 from os.path import expanduser
 
 from valutakrambod.services import Orderbook
@@ -67,7 +68,7 @@ https://www.kraken.com/help/api#general-usage .
                 # as request 1796106.
                 for order in j['result'][pairstr][side]:
                     #print("Updating %s", (side, order), now - order[2])
-                    o.update(oside, float(order[0]), float(order[1]), order[2])
+                    o.update(oside, Decimal(order[0]), Decimal(order[1]), order[2])
                 #print(o)
             self.updateOrderbook(pair, o)
 
@@ -86,8 +87,8 @@ https://www.kraken.com/help/api#general-usage .
             #print(j)
             if 0 != len(j['error']):
                 raise Exception(j['error'])
-            ask = float(j['result'][pair]['a'][0])
-            bid = float(j['result'][pair]['b'][0])
+            ask = Decimal(j['result'][pair]['a'][0])
+            bid = Decimal(j['result'][pair]['b'][0])
             self.updateRates(p, ask, bid, None)
             res[p] = self.rates[p]
         return res

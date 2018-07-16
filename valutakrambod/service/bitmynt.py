@@ -5,6 +5,7 @@
 import unittest
 import time
 
+from decimal import Decimal
 from valutakrambod.services import Service
 
 class Bitmynt(Service):
@@ -33,8 +34,8 @@ Query the Bitmynt API.
             t = p[1].lower()
             if t in j:
                 self.updateRates(p,
-                                 float(j[t]['sell']), # ask
-                                 float(j[t]['buy']), # bid
+                                 Decimal(j[t]['sell']), # ask
+                                 Decimal(j[t]['buy']), # bid
                                  j['timestamp'])
                 res[p] = self.rates[p]
         return res

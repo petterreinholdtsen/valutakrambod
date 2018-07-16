@@ -7,6 +7,7 @@ import json
 import time
 import unittest
 
+from decimal import Decimal
 from os.path import expanduser
 from tornado import ioloop
 
@@ -54,8 +55,8 @@ the websocket API.
             # should we catch it?
             j, r = self._jsonget(url)
             #print(j)
-            ask = float(j['ask'])
-            bid = float(j['bid'])
+            ask = Decimal(j['ask'])
+            bid = Decimal(j['bid'])
             self.updateRates(p, ask, bid, int(j['timestamp']))
             res[p] = self.rates[p]
         return res
@@ -110,7 +111,7 @@ the websocket API.
                         'bids' : o.SIDE_BID,
                     }[side]
                     for e in d[side]:
-                        o.update(oside, float(e[0]), float(e[1]))
+                        o.update(oside, Decimal(e[0]), Decimal(e[1]))
                 o.setupdated(int(d['timestamp']))
                 self.service.updateOrderbook(self._channelmap[m['channel']], o)
         def _on_connection_close(self):

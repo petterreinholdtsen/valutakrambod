@@ -3,6 +3,7 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import collections
+import decimal
 import json
 import statistics
 import time
@@ -116,7 +117,7 @@ services to store configuration.
                           request_timeout=timeout,
         )
         response = self.http_client.fetch(req)
-        j = json.loads(response.body.decode('UTF-8'))
+        j = json.loads(response.body.decode('UTF-8'), parse_float=decimal.Decimal)
         return j, response
     def _post(self, url, body = "", headers = None):
         req = httpclient.HTTPRequest(url, "POST", body=body, headers=headers)

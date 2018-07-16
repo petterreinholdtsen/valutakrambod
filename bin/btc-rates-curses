@@ -7,6 +7,7 @@ import optparse
 import time
 
 from curses import wrapper
+from decimal import Decimal
 from os.path import expanduser
 from sortedcontainers.sorteddict import SortedDict
 from tornado import ioloop
@@ -46,7 +47,7 @@ class CursesViewer(object):
             if created is not None:
                 age = now - created
             else:
-                age = float('nan')
+                age = Decimal('nan')
             if askprice is not None and askprice != 0.0:
                 spread = (1-bidprice/askprice)*100
             else:
