@@ -196,9 +196,9 @@ loaded from the stored configuration.
             res = self._query_private('OpenOrders', args)
             print(res)
     def trading(self):
-        if self.trader is None:
-            self.trader = self.KrakenTrading(self)
-        return self.trader
+        if self.activetrader is None:
+            self.activetrader = self.KrakenTrading(self)
+        return self.activetrader
 
 class TestKraken(unittest.TestCase):
     """
