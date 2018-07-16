@@ -2,7 +2,8 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
-import json
+import decimal
+import simplejson
 import time
 import unittest
 
@@ -60,7 +61,7 @@ https://bl3p.eu/api .
         def _on_connection_success(self):
             pass
         def _on_message(self, msg):
-            m = json.loads(msg)
+            m = simplejson.loads(msg, use_decimal=True)
             #print(m)
             o = Orderbook()
             for side in ('asks', 'bids'):
@@ -69,7 +70,8 @@ https://bl3p.eu/api .
                     'bids' : o.SIDE_BID,
                 }[side]
                 for e in m[side]:
-                    o.update(oside, e['price_int'] / 100000, e['price_int'] / 100000 )
+                    o.update(oside, decimal.Decimal(e['price_int']) / 100000,
+                             decimal.Decimal(e['price_int']) / 100000 )
             # FIXME setting our own timestamp, as there is no
             # timestamp from the source.  Asked bl3p to set one in
             # email sent 2018-06-27.

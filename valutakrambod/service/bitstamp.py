@@ -3,7 +3,7 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import configparser
-import json
+import simplejson
 import time
 import unittest
 
@@ -100,11 +100,11 @@ the websocket API.
                     }
                 })
         def _on_message(self, msg):
-            m = json.loads(msg)
+            m = simplejson.loads(msg, use_decimal=True)
             #print(m)
             if 'data' == m['event']:
                 o = Orderbook()
-                d = json.loads(m['data'])
+                d = simplejson.loads(m['data'], use_decimal=True)
                 for side in ('asks', 'bids'):
                     oside = {
                         'asks' : o.SIDE_ASK,

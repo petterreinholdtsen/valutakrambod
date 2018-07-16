@@ -4,7 +4,7 @@
 
 import datetime
 import dateutil.parser
-import json
+import simplejson
 import time
 from pytz import UTC
 
@@ -79,7 +79,7 @@ Query the Hitbtc API.
         def symbols2pair(self, symbol):
             return (symbol[:3], symbol[3:])
         def _on_message(self, msg):
-            m = json.loads(msg)
+            m = simplejson.loads(msg, use_decimal=True)
             #print(m)
             #print()
             if 'method' in m:

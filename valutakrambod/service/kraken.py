@@ -5,8 +5,8 @@
 import base64
 import configparser
 import hashlib
-import json
 import hmac
+import simplejson
 import time
 import unittest
 import urllib
@@ -140,7 +140,7 @@ loaded from the stored configuration.
         def _query_private(self, method, args):
             url = "%sBalance" % self.baseurl
             body, response = self._post(url, args)
-            j = json.loads(body.decode('UTF-8'))
+            j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
             print(j)
             if 0 != len(j['error']):
                 exceptionmap = {
