@@ -135,7 +135,7 @@ Run simple self test.
 """
     s = Hitbtc()
     print(s.currentRates())
-    s.subscribe(lambda service, pair: print(pair,
+    s.subscribe(lambda service, pair, changed: print(pair,
                                             service.rates[pair]['ask'],
                                             service.rates[pair]['bid'],
                                             time.time() - service.rates[pair]['stored'],
