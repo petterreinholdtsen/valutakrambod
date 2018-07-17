@@ -38,7 +38,7 @@ Documentation is available from https://bitpay.com/api .
             if 'error' in j:
                 raise Error(j['error'])
             buyrate = j['data']['rate']
-            self.updateRates(p, Decimal('nan'), buyrate, None)
+            self.updateRates(p, Decimal('nan'), Decimal(buyrate), None)
             res[p] = self.rates[p]
         return res
 
