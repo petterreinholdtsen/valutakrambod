@@ -63,6 +63,7 @@ class WebSocketClient(object):
             raise RuntimeError('Web socket connection is already closed.')
 
         self._ws_connection.close()
+        self._ws_connection = None
 
     def _connect_callback(self, future):
         if future.exception() is None:
@@ -103,12 +104,15 @@ class WebSocketClient(object):
     def _on_connection_close(self):
         """This is called when server closed the connection.
         """
+        self.service.logerror("connection closed for %s: %s" % (
+            self.service.servicename(), str(exception)
+        ))
         pass
 
     def _on_connection_error(self, exception):
         """This is called in case if connection to the server could
         not established.
         """
-        self.service.logerror("connection failed for %s: %s" % (
+        self.service.logerror("connection error for %s: %s" % (
             self.service.servicename(), str(exception)
         ))
