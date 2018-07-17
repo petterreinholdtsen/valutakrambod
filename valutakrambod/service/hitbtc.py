@@ -2,10 +2,14 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+import configparser
 import datetime
 import dateutil.parser
 import simplejson
 import time
+import unittest
+
+from os.path import expanduser
 from pytz import UTC
 
 from decimal import Decimal
@@ -130,23 +134,42 @@ Query the Hitbtc API.
         def _on_connection_error(self, exception):
             pass
 
-def main():
+class TestHitbtc(unittest.TestCase):
     """
 Run simple self test.
 """
-    s = Hitbtc()
-    print(s.currentRates())
-    s.subscribe(lambda service, pair, changed: print(pair,
-                                            service.rates[pair]['ask'],
-                                            service.rates[pair]['bid'],
-                                            time.time() - service.rates[pair]['stored'],
-    ))
-    c = s.websocket()
-    c.connect()
-    try:
-        ioloop.IOLoop.instance().start()
-    except KeyboardInterrupt:
-        c.close()
+    def setUp(self):
+        self.s = Hitbtc(['BTC', 'USD'])
+        configpath = expanduser('~/.config/valutakrambod/testsuite.ini')
+        self.config = configparser.ConfigParser()
+        self.config.read(configpath)
+        self.s.confinit(self.config)
+    def testCurrentRates(self):
+        res = self.s.currentRates()
+        pairs = self.s.ratepairs()
+        for pair in pairs:
+            self.assertTrue(pair in res)
+            ask = res[pair]['ask']
+            bid = res[pair]['bid']
+            self.assertTrue(ask >= bid)
+    def testWebsocket(self):
+        """Test websocket subscription of updates.
+
+        """
+        def printUpdate(service, pair):
+            print(pair,
+                  service.rates[pair]['ask'],
+                  service.rates[pair]['bid'],
+                  time.time() - service.rates[pair]['when'] ,
+                  time.time() - service.rates[pair]['stored'] ,
+            )
+        #self.s.subscribe(printUpdate)
+        c = self.s.websocket()
+        c.connect()
+        io_loop = ioloop.IOLoop.instance()
+        io_loop.call_later(10, io_loop.stop)
+        io_loop.start()
 
 if __name__ == '__main__':
-    main()
+    t = TestHitbtc()
+    unittest.main()
