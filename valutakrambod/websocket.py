@@ -9,7 +9,6 @@ from tornado import httputil
 from tornado import ioloop
 from tornado import websocket
 
-import functools
 import json
 import time
 
