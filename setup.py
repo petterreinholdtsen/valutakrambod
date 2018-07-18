@@ -18,7 +18,6 @@ setup(
     version='0.0.0',
     description='pluggable (virtual) currency exchange API client library',
     long_description=DESCRIPTION,
-    license='GPL',
 
     # See https://pypi.org/pypi?%3Aaction=list_classifiers for values
     classifiers=[
