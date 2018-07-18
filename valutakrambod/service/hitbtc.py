@@ -156,7 +156,7 @@ Run simple self test.
         """Test websocket subscription of updates.
 
         """
-        def printUpdate(service, pair):
+        def printUpdate(service, pair, changed):
             print(pair,
                   service.rates[pair]['ask'],
                   service.rates[pair]['bid'],
