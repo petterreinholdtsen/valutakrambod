@@ -29,11 +29,15 @@ class WebSocketClient(object):
         self.service = service
         self.connect_timeout = connect_timeout
         self.request_timeout = request_timeout
+        self.trace = False
 
     def connect(self, url):
         """Connect to the server.
         :param str url: server URL.
         """
+
+        if self.trace:
+            print("Connecting to %s" % url)
 
         headers = httputil.HTTPHeaders({'Content-Type': APPLICATION_JSON})
         request = httpclient.HTTPRequest(url=url,
@@ -51,8 +55,13 @@ class WebSocketClient(object):
         """
         if not self._ws_connection:
             raise RuntimeError('Web socket connection is closed.')
-
-        self._ws_connection.write_message(escape.utf8(json.dumps(data)))
+        if self.trace:
+            print("Writing '%s'" % data)
+        if not isinstance(data, str):
+            data = escape.utf8(json.dumps(data))
+        self._ws_connection.write_message(data)
+        if self.trace:
+            print("Wrote '%s'" % data)
 
     def close(self):
         """Close connection.

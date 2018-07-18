@@ -4,9 +4,11 @@
 
 import time
 import unittest
+from tornado import ioloop
 
 from valutakrambod.services import Service
 from valutakrambod.services import Orderbook
+from valutakrambod.socketio import SocketIOClient
 
 
 class Paymium(Service):
@@ -75,6 +77,50 @@ https://github.com/Paymium/api-documentation/#ticker
             res[p] = self.rates[p]
         return res
 
+    class SIOClient(SocketIOClient):
+        def __init__(self, service):
+            super().__init__(service)
+            self.url = "wss://paymium.com/ws/socket.io/?transport=websocket"
+        def connect(self, url = None):
+            if url is None:
+                url = self.url
+            super().connect(url)
+        def _on_connection_success(self):
+            self.subscribe('/public')
+        def _on_event(self, channel, events):
+            #print("_on_events('%s', '%s')" % (channel, events))
+            t, m = events
+            if 'stream' == t:
+                self._on_stream_event(m)
+            elif 'announcement' == t:
+                # Ignore
+                pass
+            else:
+                pass # unknown event type
+        def _on_stream_event(self, data):
+            for t in data.keys():
+                if 'ticker' == t:
+                    pair = ('BTC', data['ticker']['currency'])
+                    self.service.updateRates(pair,
+                                             data['ticker']['ask'],
+                                             data['ticker']['bid'],
+                                             data['ticker']['at'],
+                    )
+                # Hm, how can we know we start with the complete
+                # ordebook when we start patching using bids and
+                # asks?
+                elif 'bids' == t:
+                    pass
+                elif 'asks' == t:
+                    pass
+                elif 'trades' == t:
+                    # Ignore trades for now
+                    pass
+                else: # unknown stream data type, ignore for now
+                    pass
+    def websocket(self):
+        return self.SIOClient(self)
+
 class TestPaymium(unittest.TestCase):
     """
 Run simple self test of the Paymium service class.
@@ -98,6 +144,24 @@ Run simple self test of the Paymium service class.
             self.assertTrue(ask >= bid)
             spread = 100*(ask/bid-1)
             self.assertTrue(spread > 0 and spread < 5)
+    def testWebsocket(self):
+        """Test websocket subscription of updates.
+
+        """
+        def printUpdate(service, pair, changed):
+            print(pair,
+                  service.rates[pair]['ask'],
+                  service.rates[pair]['bid'],
+                  time.time() - service.rates[pair]['when'] ,
+                  time.time() - service.rates[pair]['stored'] ,
+            )
+        self.s.subscribe(printUpdate)
+        c = self.s.websocket()
+        c.connect()
+        io_loop = ioloop.IOLoop.instance()
+        io_loop.call_later(10, io_loop.stop)
+        io_loop.start()
+
 
 if __name__ == '__main__':
     t = TestPaymium()
