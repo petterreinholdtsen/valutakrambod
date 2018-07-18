@@ -111,12 +111,15 @@ services to store configuration.
     def confset(self, key, value):
         return self._config.set(self.servicename(), key, value)
 
-    def _jsonget(self, url, timeout = 30):
+    def _get(self, url, timeout = 30):
         req = httpclient.HTTPRequest(url,
                           "GET",
                           request_timeout=timeout,
         )
         response = self.http_client.fetch(req)
+        return response
+    def _jsonget(self, url, timeout = 30):
+        response = self._get(url, timeout=timeout)
         j = simplejson.loads(response.body.decode('UTF-8'), use_decimal=True)
         return j, response
     def _post(self, url, body = "", headers = None):

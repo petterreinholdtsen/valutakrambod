@@ -11,6 +11,7 @@ from .exchangerates import Exchangerates
 from .hitbtc import Hitbtc
 from .kraken import Kraken
 from .miraiex import MiraiEx
+from .norgesbank import Norgesbank
 from .oneforge import OneForge
 from .paymium import Paymium
 
@@ -30,6 +31,7 @@ __SERVICES__ = [
     Hitbtc,
     Kraken,
     MiraiEx,
+    Norgesbank,
     Paymium,
 ]
 
