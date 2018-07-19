@@ -114,10 +114,6 @@ the websocket API.
                         o.update(oside, Decimal(e[0]), Decimal(e[1]))
                 o.setupdated(int(d['timestamp']))
                 self.service.updateOrderbook(self._channelmap[m['channel']], o)
-        def _on_connection_close(self):
-            pass
-        def _on_connection_error(self, exception):
-            pass
     def websocket(self):
         return self.WSClient(self)
 
