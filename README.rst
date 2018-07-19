@@ -38,3 +38,11 @@ https://paymium.com/api/v1/data/eur/ticker
 https://www.bitstamp.net/api/v2/ticker/btc$cur/
 http://www.norges-bank.no/RSS/Amerikanske-dollar-USD---dagens-valutakurs-fra-Norges-Bank/
 http://www.norges-bank.no/RSS/Euro-EUR---dagens-valutakurs-fra-Norges-Bank/
+
+
+Docker
+
+  # Build
+  docker build -t valutakrambod .
+  # Run tests
+  docker run --rm -it valutakrambod python3 setup.py test
