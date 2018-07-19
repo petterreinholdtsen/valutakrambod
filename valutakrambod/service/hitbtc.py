@@ -3,14 +3,12 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import configparser
-import datetime
 import dateutil.parser
 import simplejson
 import time
 import unittest
 
 from os.path import expanduser
-from pytz import UTC
 
 from decimal import Decimal
 from tornado import ioloop
@@ -59,7 +57,6 @@ Query the Hitbtc API.
         return self.WSClient(self)
 
     class WSClient(WebSocketClient):
-        epoch = datetime.datetime(1970, 1, 1, tzinfo=UTC)
         def __init__(self, service):
             super().__init__(service)
             self.url = "wss://api.hitbtc.com/api/2/ws"
@@ -68,6 +65,7 @@ Query the Hitbtc API.
                 url = self.url
             super().connect(url)
         def _on_connection_success(self):
+            print("_on_connection_success()")
             for p in self.service.ratepairs():
                 self.send({
                     "method": "subscribeOrderbook", # subscribeTicker
@@ -79,7 +77,7 @@ Query the Hitbtc API.
             pass
         def datestr2epoch(self, datestr):
             when = dateutil.parser.parse(datestr)
-            return (when - self.epoch).total_seconds()
+            return when.timestamp()
         def symbols2pair(self, symbol):
             return (symbol[:3], symbol[3:])
         def _on_message(self, msg):

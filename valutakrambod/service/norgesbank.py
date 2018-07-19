@@ -2,14 +2,12 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
-import datetime
 import dateutil
 import re
 import unittest
 
 from decimal import Decimal
 from lxml import etree
-from pytz import UTC
 
 from valutakrambod.services import Service
 
@@ -18,7 +16,6 @@ class Norgesbank(Service):
 daily.  See also https://www.norges-bank.no/RSS/.
 
     """
-    epoch = datetime.datetime(1970, 1, 1, tzinfo=UTC)
     baseurl = "https://www.norges-bank.no/"
 
     def servicename(self):
@@ -31,7 +28,7 @@ daily.  See also https://www.norges-bank.no/RSS/.
             ]
     def datestr2epoch(self, datestr):
         when = dateutil.parser.parse(datestr)
-        return (when - self.epoch).total_seconds()
+        return when.timestamp()
     def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
