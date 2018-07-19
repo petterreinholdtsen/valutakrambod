@@ -43,15 +43,22 @@ daily.  See also https://www.norges-bank.no/RSS/.
                 ('EUR', 'NOK') : eururl,
                 ('USD', 'NOK') : usdurl,
             }[pair]
+            #print(url)
             r = self._get(url)
             rss =  etree.fromstring(r.body)
             item = rss.xpath('/rss/channel/item')[0]
             title = item.xpath("./title/text()")[0]
+            # Note, pubdate from this source can not be trusted.  It
+            # was seen to move back in time, from 17:00 GMT to 03:00
+            # GMT, and is ignored because of this.
             pubdate = item.xpath("./pubDate/text()")[0]
-            when = self.datestr2epoch(pubdate)
-            m = re.match("1 %s = ([0-9.]+) NOK \d{4}-\d{2}-\d{2} Norges Banks midtkurs" % pair[0], title)
+            m = re.match("1 %s = ([0-9.]+) NOK (\d{4}-\d{2}-\d{2}) Norges Banks midtkurs" % pair[0], title)
             if m:
                 r = Decimal(m.group(1))
+                # Hardcode 16:00 CET based on information from
+                # https://www.norges-bank.no/Statistikk/Valutakurser/
+                when = self.datestr2epoch("%s 16:00 CET" % m.group(2))
+                #print(title, pubdate, when)
                 self.updateRates(pair, r, r, when)
                 res[pair] = self.rates[pair]
             else:
