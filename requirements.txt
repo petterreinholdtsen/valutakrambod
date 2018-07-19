@@ -2,3 +2,5 @@ dateutils
 sortedcontainers
 tornado
 websocket-client
+simplejson
+lxml
