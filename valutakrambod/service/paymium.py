@@ -158,7 +158,7 @@ Run simple self test of the Paymium service class.
         self.s.subscribe(printUpdate)
         c = self.s.websocket()
         c.connect()
-        io_loop = ioloop.IOLoop.instance()
+        io_loop = ioloop.IOLoop.current()
         io_loop.call_later(10, io_loop.stop)
         io_loop.start()
 

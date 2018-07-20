@@ -70,7 +70,7 @@ Run simple self test.
             )
         self.s.subscribe(printUpdate)
         self.s.periodicUpdate(3)
-        io_loop = ioloop.IOLoop.instance()
+        io_loop = ioloop.IOLoop.current()
         io_loop.call_later(10, io_loop.stop)
         io_loop.start()
 

@@ -20,7 +20,7 @@ def BTCrates():
     for c in collectors:
         c.connect()
     try:
-        ioloop.IOLoop.instance().start()
+        ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
         pass
     for c in collectors:

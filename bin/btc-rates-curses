@@ -116,7 +116,7 @@ from the current period and not too short.
     def run(self, stdscr):
         self.stdscr = stdscr
         self.stdscr.clear()
-        self.ioloop = ioloop.IOLoop.instance()
+        self.ioloop = ioloop.IOLoop.current()
         self.services = []
         for e in valutakrambod.service.knownServices():
             service = e(self.currencies)
