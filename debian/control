@@ -1,5 +1,5 @@
 Source: valutakrambod
-Section: unknown
+Section: python
 Priority: optional
 Maintainer: Petter Reinholdtsen <pere@debian.org>
 Build-Depends: debhelper (>= 9), dh-python, python-all, python-setuptools, python3-all, python3-setuptools
@@ -10,21 +10,11 @@ Build-Depends: debhelper (>= 9), dh-python, python-all, python-setuptools, pytho
   , python3-simplejson
   , python3-lxml
 Standards-Version: 3.9.8
-Homepage: <insert the upstream URL, if relevant>
-X-Python-Version: >= 2.6
+Homepage: https://github.com/petterreinholdtsen/valutakrambod
 X-Python3-Version: >= 3.2
-#Vcs-Git: https://anonscm.debian.org/git/python-modules/packages/valutakrambod.git
-#Vcs-Browser: https://anonscm.debian.org/cgit/python-modules/packages/valutakrambod.git/
+Vcs-Git: https://github.com/petterreinholdtsen/valutakrambod.git
+Vcs-Browser: https://github.com/petterreinholdtsen/valutakrambod
 #Testsuite: autopkgtest-pkg-python
-
-Package: python-valutakrambod
-Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}
-Suggests: python-valutakrambod-doc
-Description: <insert up to 60 chars description> (Python 2)
- <insert long description, indented with spaces>
- .
- This package installs the library for Python 2.
 
 Package: python3-valutakrambod
 Architecture: all
