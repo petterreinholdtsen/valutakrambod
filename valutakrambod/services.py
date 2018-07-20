@@ -86,6 +86,8 @@ class Service(object):
                     if self.wantedpairs is None:
                         self.wantedpairs = []
                     self.wantedpairs.append(p)
+        else:
+            self.wantedpairs = self.ratepairs()
         #print("Want", self.wantedpairs)
         self.errsubscribers = []
     def errsubscribe(self, callback):
