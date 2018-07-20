@@ -73,7 +73,7 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
         return res
 
     def websocket(self):
-        """Not known of Mirai provide websocket API 2018-07-02."""
+        """Not known if Mirai provide websocket API 2018-07-02."""
         return None
 
 class TestMiraiEx(unittest.TestCase):
