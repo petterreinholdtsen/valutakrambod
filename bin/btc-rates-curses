@@ -10,7 +10,7 @@ from curses import wrapper
 from decimal import Decimal
 from os.path import expanduser
 from sortedcontainers.sorteddict import SortedDict
-from tornado import ioloop
+import tornado.ioloop
 
 import valutakrambod
 
@@ -116,7 +116,7 @@ from the current period and not too short.
     def run(self, stdscr):
         self.stdscr = stdscr
         self.stdscr.clear()
-        self.ioloop = ioloop.IOLoop.current()
+        self.ioloop = tornado.ioloop.IOLoop.current()
         self.services = []
         for e in valutakrambod.service.knownServices():
             service = e(self.currencies)
@@ -141,7 +141,6 @@ from the current period and not too short.
                 service.periodicUpdate(60)
 
         # Make sure to update at least ever 5 seconds if nothing happen elsewhere.
-        import tornado.ioloop
         self.regular =  tornado.ioloop.PeriodicCallback(self.drawdata, 5 * 1000)
         self.regular.start()
         try:
