@@ -28,7 +28,7 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
             ]
     def fetchRates(self, pairs = None):
         if pairs is None:
-            pairs = self.ratepairs()
+            pairs = self.wantedpairs
         #self.fetchMarkets(pairs)
         self.fetchOrderbooks(pairs)
 
@@ -45,7 +45,7 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
                     'bids' : o.SIDE_BID,
                 }[side]
                 for order in j[side]:
-                    #print("Updating %s for %s", (side, pair), order)
+                    #print("Updating %s for %s" % (side, pair), order)
                     o.update(oside, Decimal(order[0]), Decimal(order[1]))
                 #print(o)
             self.updateOrderbook(pair, o)
