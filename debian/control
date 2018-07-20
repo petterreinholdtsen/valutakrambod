@@ -8,6 +8,7 @@ Build-Depends: debhelper (>= 9), dh-python, python-all, python-setuptools, pytho
   , python3-dateutil
   , python3-tz
   , python3-simplejson
+  , python3-lxml
 Standards-Version: 3.9.8
 Homepage: <insert the upstream URL, if relevant>
 X-Python-Version: >= 2.6
