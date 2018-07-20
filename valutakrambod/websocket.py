@@ -6,7 +6,6 @@ from tornado import escape
 from tornado import gen
 from tornado import httpclient
 from tornado import httputil
-from tornado import ioloop
 from tornado import websocket
 
 import json
@@ -45,7 +44,6 @@ class WebSocketClient(object):
                                          request_timeout=self.request_timeout,
                                          headers=headers)
         ws_conn = websocket.websocket_connect(request,
-                                              io_loop=ioloop.IOLoop.current(),
                                               callback=self._connect_callback,
                                               on_message_callback=self._on_message)
 
