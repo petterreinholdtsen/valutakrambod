@@ -1,6 +1,6 @@
 dateutils
 sortedcontainers
-tornado==4.5.3
+tornado >=4.4, <5
 websocket-client
 simplejson
 lxml
