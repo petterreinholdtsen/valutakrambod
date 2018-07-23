@@ -42,7 +42,7 @@ the websocket API.
             return self.keymap[currency]
         else:
             return currency
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}
@@ -53,7 +53,7 @@ the websocket API.
             #print(url)
             # this call raise HTTP error with invalid currency.
             # should we catch it?
-            j, r = self._jsonget(url)
+            j, r = await self._jsonget(url)
             #print(j)
             ask = Decimal(j['ask'])
             bid = Decimal(j['bid'])

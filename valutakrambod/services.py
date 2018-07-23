@@ -69,7 +69,7 @@ class Trading(object):
 
 class Service(object):
     def __init__(self, currencies=None):
-        self.http_client = httpclient.HTTPClient()
+        self.http_client = httpclient.AsyncHTTPClient()
         self.rates = {}
         self.orderbooks = {}
         self.subscribers = []
@@ -113,15 +113,16 @@ services to store configuration.
     def confset(self, key, value):
         return self._config.set(self.servicename(), key, value)
 
-    def _get(self, url, timeout = 30):
+    async def _get(self, url, timeout = 30):
         req = httpclient.HTTPRequest(url,
                           "GET",
                           request_timeout=timeout,
         )
-        response = self.http_client.fetch(req)
+        response = await self.http_client.fetch(req)
+        #print("updated %s" % self.servicename())
         return response
-    def _jsonget(self, url, timeout = 30):
-        response = self._get(url, timeout=timeout)
+    async def _jsonget(self, url, timeout = 30):
+        response = await self._get(url, timeout=timeout)
         j = simplejson.loads(response.body.decode('UTF-8'), use_decimal=True)
         return j, response
     def _post(self, url, body = "", headers = None):
@@ -143,8 +144,17 @@ seconds specified in as an argument.  The default update frequency is
             raise ValueError('mindelay must be a positive number or zero')
         if self.periodic is not None:
             self.periodic.stop()
+            self.periodic = None
         if 0 != mindelay:
-            self.periodic =  tornado.ioloop.PeriodicCallback(self.fetchRates,
+            from functools import partial
+            async def periodicFetchRates(self):
+                try:
+                    await self.fetchRates()
+                except Exception as e:
+                    self.logerror("%s fetchRates: %s" % (self.servicename(),
+                                                         str(e)))
+                    raise
+            self.periodic =  tornado.ioloop.PeriodicCallback(partial(periodicFetchRates, self),
                                                              mindelay * 1000)
             self.periodic.start()
 
@@ -250,7 +260,7 @@ service provide currency exchange rates for, on this form:
 ]
 """
         raise NotImplementedError()
-    def currentRates(self, pairs = None):
+    async def currentRates(self, pairs = None):
         """Return list of currency exchange rates, on this form
 
 {
@@ -271,7 +281,7 @@ This method must be implemented in each service.
 
         """
         if {} == self.rates:
-            self.fetchRates(self.wantedpairs)
+            await self.fetchRates(self.wantedpairs)
         if self.wantedpairs is None:
             return self.rates
         else:
@@ -281,7 +291,7 @@ This method must be implemented in each service.
                 res[p] = self.rates[p]
             return res
 
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         raise NotImplementedError()
 
     def websocket(self):

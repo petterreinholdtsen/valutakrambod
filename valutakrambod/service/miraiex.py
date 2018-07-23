@@ -26,18 +26,18 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
             ('GST', 'BTC'),
             ('LTC', 'BTC'),
             ]
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.wantedpairs
-        #self.fetchMarkets(pairs)
-        self.fetchOrderbooks(pairs)
+        #await self.fetchMarkets(pairs)
+        await self.fetchOrderbooks(pairs)
 
-    def fetchOrderbooks(self, pairs):
+    async def fetchOrderbooks(self, pairs):
         for pair in pairs:
             o = Orderbook()
             url = "%smarkets/%s%s/depth" % (self.baseurl, pair[0], pair[1])
             #print(url)
-            j, r = self._jsonget(url)
+            j, r = await self._jsonget(url)
             #print(j)
             for side in ('asks', 'bids'):
                 oside = {
@@ -50,10 +50,10 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
                 #print(o)
             self.updateOrderbook(pair, o)
 
-    def fetchMarkets(self, pairs):
+    async def fetchMarkets(self, pairs):
         url = "%smarkets" % self.baseurl
         #print(url)
-        j, r = self._jsonget(url)
+        j, r = await self._jsonget(url)
         #print(j)
         res = {}
         for market in j:

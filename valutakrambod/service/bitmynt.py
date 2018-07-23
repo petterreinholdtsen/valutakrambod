@@ -22,12 +22,12 @@ Query the Bitmynt API.
             ('BTC', 'NOK'),
             ('BTC', 'EUR'),
             ]
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         url = "%sticker.pl" % self.baseurl
         #print(url)
-        j, r = self._jsonget(url)
+        j, r = await self._jsonget(url)
         #print(j)
         res = {}
         for p in pairs:

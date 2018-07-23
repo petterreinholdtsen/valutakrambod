@@ -26,11 +26,11 @@ https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchang
     def datestr2epoch(self, datestr):
         when = dateutil.parser.parse(datestr)
         return when.timestamp()
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         url = "%slatest" % self.baseurl
-        j, r = self._jsonget(url)
+        j, r = await self._jsonget(url)
         base = j['base']
         res = {}
         for r in j['rates'].keys():

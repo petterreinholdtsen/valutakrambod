@@ -83,12 +83,12 @@ class CursesViewer(object):
             service.rates[pair]['when'],
             service.rates[pair]['lastchange'],
         )
-    def runRefresh(self, service):
+    async def runRefresh(self, service):
         try:
             msg = "Updating %s" % service.servicename()
             self.stdscr.addstr( 0, 0, msg)
             self.stdscr.refresh()
-            service.fetchRates(service.wantedpairs)
+            await service.fetchRates(service.wantedpairs)
             self.stdscr.addstr( 0, 0, ' ' * len(msg))
             self.stdscr.refresh()
         except Exception as e:

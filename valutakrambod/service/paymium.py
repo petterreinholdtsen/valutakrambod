@@ -24,20 +24,20 @@ https://github.com/Paymium/api-documentation/#ticker
         return [
             ('BTC', 'EUR'),
             ]
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         #self._fetchTicker(pairs)
-        self._fetchOrderbooks(pairs)
+        await self._fetchOrderbooks(pairs)
 
-    def _fetchOrderbooks(self, pairs):
+    async def _fetchOrderbooks(self, pairs):
         now = time.time()
         for pair in pairs:
             f = pair[0]
             t = pair[1]
             url = "%s%s/depth" % (self.baseurl, t.lower())
             #print(url)
-            j, r = self._jsonget(url)
+            j, r = await self._jsonget(url)
             #print(j)
             o = Orderbook()
             for side in ('asks', 'bids'):
@@ -56,7 +56,7 @@ https://github.com/Paymium/api-documentation/#ticker
                 #print(o)
             self.updateOrderbook(pair, o)
 
-    def _fetchTicker(self, pairs = None):
+    async def _fetchTicker(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}
@@ -66,7 +66,7 @@ https://github.com/Paymium/api-documentation/#ticker
             pair="X%sZ%s" % (f, t)
             #print(pair)
             url = "%s%s/ticker" % (self.baseurl, t.lower())
-            (j, r) = self._jsonget(url)
+            (j, r) = await self._jsonget(url)
             #print(r.code)
             if 200 != r.code:
                 raise Error()

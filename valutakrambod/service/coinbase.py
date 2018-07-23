@@ -19,7 +19,7 @@ class Coinbase(Service):
             ('BTC', 'USD'),
             ]
     
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}
@@ -28,9 +28,9 @@ class Coinbase(Service):
             t = p[1]
             sellurl = "%sprices/sell?currency=%s" % (self.baseurl, t)
             buyurl  = "%sprices/buy?currency=%s"  % (self.baseurl, t)
-            (sj, sr) = self._jsonget(sellurl)
+            (sj, sr) = await self._jsonget(sellurl)
             #print(sj)
-            (bj, br) = self._jsonget(buyurl)
+            (bj, br) = await self._jsonget(buyurl)
             #print(bj)
             ask = Decimal(bj['data']['amount'])
             bid = Decimal(sj['data']['amount'])

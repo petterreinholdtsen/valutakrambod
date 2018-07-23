@@ -34,7 +34,7 @@ Query the Hitbtc API.
             return self.keymap[currency]
         else:
             return currency
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}
@@ -45,7 +45,7 @@ Query the Hitbtc API.
             #print(pair)
             url = "%spublic/%s/ticker" % (self.baseurl, pair)
             #print(url)
-            j, r = self._jsonget(url)
+            j, r = await self._jsonget(url)
             #print(j)
             ask = Decimal(j['ask'])
             bid = Decimal(j['bid'])

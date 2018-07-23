@@ -42,20 +42,20 @@ https://www.kraken.com/help/api#general-usage .
             return currency
     def _makepair(self, f, t):
         return "X%sZ%s" % (self._currencyMap(f), self._currencyMap(t))
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.wantedpairs
-        #self._fetchTicker(pairs)
-        self._fetchOrderbooks(pairs)
+        #await self._fetchTicker(pairs)
+        await self._fetchOrderbooks(pairs)
 
-    def _fetchOrderbooks(self, pairs):
+    async def _fetchOrderbooks(self, pairs):
         now = time.time()
         res = {}
         for pair in pairs:
             pairstr = self._makepair(pair[0], pair[1])
             url = "%sDepth?pair=%s" % (self.baseurl, pairstr)
             #print(url)
-            j, r = self._jsonget(url)
+            j, r = await self._jsonget(url)
             #print(j)
             o = Orderbook()
             for side in ('asks', 'bids'):
@@ -72,7 +72,7 @@ https://www.kraken.com/help/api#general-usage .
                 #print(o)
             self.updateOrderbook(pair, o)
 
-    def _fetchTicker(self, pairs = None):
+    async def _fetchTicker(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}
@@ -83,7 +83,7 @@ https://www.kraken.com/help/api#general-usage .
             #print(pair)
             url = "%sTicker?pair=%s" % (self.baseurl, pair)
             #print(url)
-            j, r = self._jsonget(url)
+            j, r = await self._jsonget(url)
             #print(j)
             if 0 != len(j['error']):
                 raise Exception(j['error'])

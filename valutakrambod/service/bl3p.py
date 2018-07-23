@@ -28,7 +28,7 @@ https://bl3p.eu/api .
             ('BTC', 'EUR'),
             ]
 
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}
@@ -39,13 +39,13 @@ https://bl3p.eu/api .
             #print(pair)
             url = "%s%s/ticker" % (self.baseurl, pair)
             #print url
-            (j, r) = self._jsonget(url)
+            (j, r) = await self._jsonget(url)
             #print(r.code)
             if 200 != r.code:
                 raise Error()
             #print(j)
-            ask = j['ask']
-            bid = j['bid']
+            ask = decimal.Decimal(j['ask'])
+            bid = decimal.Decimal(j['bid'])
             self.updateRates(p, ask, bid, int(j['timestamp']))
             res[p] = self.rates[p]
         return res

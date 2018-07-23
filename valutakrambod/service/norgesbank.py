@@ -29,7 +29,7 @@ daily.  See also https://www.norges-bank.no/RSS/.
     def datestr2epoch(self, datestr):
         when = dateutil.parser.parse(datestr)
         return when.timestamp()
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         eururl = '%sRSS/Euro-EUR---dagens-valutakurs-fra-Norges-Bank/' % self.baseurl
@@ -41,7 +41,7 @@ daily.  See also https://www.norges-bank.no/RSS/.
                 ('USD', 'NOK') : usdurl,
             }[pair]
             #print(url)
-            r = self._get(url)
+            r = await self._get(url)
             rss =  etree.fromstring(r.body)
             item = rss.xpath('/rss/channel/item')[0]
             title = item.xpath("./title/text()")[0]

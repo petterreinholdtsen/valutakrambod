@@ -24,7 +24,7 @@ Documentation is available from https://bitpay.com/api .
             ('BTC', 'EUR'),
             ('BTC', 'USD'),
             ]
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.ratepairs()
         res = {}
@@ -33,7 +33,7 @@ Documentation is available from https://bitpay.com/api .
             t = p[1]
             url = "%s%s" % (self.baseurl, t)
             #print(url)
-            j, r = self._jsonget(url)
+            j, r = await self._jsonget(url)
             #print(j)
             if 'error' in j:
                 raise Error(j['error'])
