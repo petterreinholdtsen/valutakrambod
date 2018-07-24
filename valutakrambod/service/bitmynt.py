@@ -4,6 +4,7 @@
 
 import unittest
 import time
+import tornado.ioloop
 
 from decimal import Decimal
 from valutakrambod.services import Service
@@ -50,8 +51,14 @@ Run simple self test.
 """
     def setUp(self):
         self.s = Bitmynt()
-    def testCurrentRates(self):
-        res = self.s.currentRates()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+    async def checkCurrentRates(self):
+        res = await self.s.currentRates()
         for pair in self.s.ratepairs():
             self.assertTrue(pair in res)
             ask = res[pair]['ask']
@@ -59,8 +66,11 @@ Run simple self test.
             self.assertTrue(ask >= bid)
             spread = 100*(ask/bid-1)
             self.assertTrue(spread > 0 and spread < 5)
+        self.ioloop.stop()
+    def testCurrentRates(self):
+        self.runCheck(self.checkCurrentRates)
+
     def testUpdates(self):
-        from tornado import ioloop
         def printUpdate(service, pair, changed):
             print(pair,
                   service.rates[pair]['ask'],
@@ -68,11 +78,13 @@ Run simple self test.
                   time.time() - service.rates[pair]['when'],
                   time.time() - service.rates[pair]['stored'],
             )
+            self.ioloop.stop()
         self.s.subscribe(printUpdate)
         self.s.periodicUpdate(3)
-        io_loop = ioloop.IOLoop.current()
-        io_loop.call_later(10, io_loop.stop)
-        io_loop.start()
+        #ioloop = tornado.ioloop.IOLoop.current()
+        to = self.ioloop.call_later(10, self.ioloop.stop)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
 
 if __name__ == '__main__':
     t = TestBitmynt()

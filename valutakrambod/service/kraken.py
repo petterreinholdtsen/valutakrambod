@@ -10,6 +10,7 @@ import simplejson
 import time
 import unittest
 import urllib
+import tornado.ioloop
 
 from decimal import Decimal
 from os.path import expanduser
@@ -116,7 +117,7 @@ loaded from the stored configuration.
             nonce = int(time.time())
             return nonce
 
-        def _post(self, url, data):
+        async def _post(self, url, data):
             urlpath = urllib.parse.urlparse(url).path.encode('UTF-8')
             data['nonce'] = self._nonce()
             datastr = urllib.parse.urlencode(data)
@@ -135,11 +136,11 @@ loaded from the stored configuration.
                 'API-Key' : self.service.confget('apikey'),
                 'API-Sign': sign,
                 }
-            body, response = self.service._post(url, datastr, headers)
+            body, response = await self.service._post(url, datastr, headers)
             return body, response
-        def _query_private(self, method, args):
+        async def _query_private(self, method, args):
             url = "%sBalance" % self.baseurl
-            body, response = self._post(url, args)
+            body, response = await self._post(url, args)
             j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
             print(j)
             if 0 != len(j['error']):
@@ -152,10 +153,10 @@ loaded from the stored configuration.
                     e = exceptionmap[j['error'][0]]
                 raise e('unable to fetch balance: %s' % j['error'])
             return j['result']
-        def balance(self):
+        async def balance(self):
             raise NotImplementedError()
             url = "%sBalance" % self.baseurl
-            assets = self._query_private('Balance', {})
+            assets = await self._query_private('Balance', {})
             for asset in assets:
                 print(asset)
             return assets
@@ -188,13 +189,13 @@ loaded from the stored configuration.
             res = self._query_private('CancelOrder', args)
         def cancelallorders(self):
             raise NotImplementedError()
-        def orders(self, market= None):
+        async def orders(self, market= None):
             raise NotImplementedError()
             args = {
                 'trades' : True,
 #                'userref' : ,
             }
-            res = self._query_private('OpenOrders', args)
+            res = await self._query_private('OpenOrders', args)
             print(res)
     def trading(self):
         if self.activetrader is None:
@@ -211,13 +212,22 @@ Run simple self test.
         self.config = configparser.ConfigParser()
         self.config.read(configpath)
         self.s.confinit(self.config)
-    def testFetchTicker(self):
-        res = self.s._fetchTicker()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+    async def checkFetchTicker(self):
+        res = await self.s._fetchTicker()
         pair = ('BTC', 'EUR')
         self.assertTrue(pair in res)
-    def testFetchOrderbooks(self):
+        self.ioloop.stop()
+    def testFetchTicker(self):
+        self.runCheck(self.checkFetchTicker)
+    async def checkFetchOrderbooks(self):
         pairs = self.s.ratepairs()
-        self.s._fetchOrderbooks(pairs)
+        await self.s._fetchOrderbooks(pairs)
         for pair in pairs:
             self.assertTrue(pair in self.s.rates)
             self.assertTrue(pair in self.s.orderbooks)
@@ -226,13 +236,19 @@ Run simple self test.
             self.assertTrue(ask >= bid)
             spread = 100*(ask/bid-1)
             self.assertTrue(spread > 0 and spread < 5)
-    def testTradingConnection(self):
+        self.ioloop.stop()
+    def testFetchOrderbooks(self):
+        self.runCheck(self.checkFetchOrderbooks)
+    async def checkTradingConnection(self):
         # Unable to test without API access credentials in the config
         if self.s.confget('apikey', fallback=None) is None:
             return
         t = self.s.trading()
-        print(t.balance())
-        print(t.orders())
+        print(await t.balance())
+        print(await t.orders())
+        self.ioloop.stop()
+    def testTradingConnection(self):
+        self.runCheck(self.checkTradingConnection)
 if __name__ == '__main__':
     t = TestKraken()
     unittest.main()

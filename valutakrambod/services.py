@@ -125,9 +125,9 @@ services to store configuration.
         response = await self._get(url, timeout=timeout)
         j = simplejson.loads(response.body.decode('UTF-8'), use_decimal=True)
         return j, response
-    def _post(self, url, body = "", headers = None):
+    async def _post(self, url, body = "", headers = None):
         req = httpclient.HTTPRequest(url, "POST", body=body, headers=headers)
-        response = self.http_client.fetch(req)
+        response = await self.http_client.fetch(req)
         return response.body, response
     def servicename(self):
         raise NotImplementedError()
