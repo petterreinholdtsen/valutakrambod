@@ -3,6 +3,7 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import unittest
+import tornado.ioloop
 
 from decimal import Decimal
 
@@ -80,15 +81,40 @@ class TestMiraiEx(unittest.TestCase):
     """Simple self test.
 
     """
-    def testCompareOrderbookTicker(self):
+    def setUp(self):
+        self.s = MiraiEx(['BTC', 'ANC', 'NOK', 'GST', 'LTC'])
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+    async def checkCurrentRates(self):
+        res = await self.s.currentRates()
+        for pair in self.s.ratepairs():
+            self.assertTrue(pair in res)
+            ask = res[pair]['ask']
+            bid = res[pair]['bid']
+            self.assertTrue(ask >= bid)
+            spread = 100*(ask/bid-1)
+            # Not checking spread, as some spreads are > 65 (ANC-BTC seen)
+            #print("Spread for %s:" % str(pair), spread)
+            #self.assertTrue(0 < spread and spread < 100)
+        self.ioloop.stop()
+    def testCurrentRates(self):
+        self.runCheck(self.checkCurrentRates)
+    async def checkCompareOrderbookTicker(self):
         # Try to detect when the two ways to fetch the ticker disagree
         asks = {}
         bids = {}
-        #print(self.s.fetchOrderbooks(self.s.wantedpairs))
+        laststore = newstore = 0
+        res = await self.s.fetchOrderbooks(self.s.wantedpairs)
         for pair in self.s.wantedpairs:
             asks[pair] = self.s.rates[pair]['ask']
             bids[pair] = self.s.rates[pair]['bid']
-        #print(self.s.fetchRates(self.s.wantedpairs))
+            if laststore < self.s.rates[pair]['stored']:
+                laststore = self.s.rates[pair]['stored']
+        res = await self.s.fetchRates(self.s.wantedpairs)
         for pair in self.s.wantedpairs:
             if asks[pair] != self.s.rates[pair]['ask']:
                 print("ask order book (%.1f and ticker (%.1f) differ for %s" % (
@@ -104,12 +130,13 @@ class TestMiraiEx(unittest.TestCase):
                     pair
                 ))
                 self.assertTrue(False)
-    def setUp(self):
-        self.s = MiraiEx()
-        self.s.currentRates()
-    def testConnection(self):
-        for pair in self.s.wantedpairs:
-            self.assertTrue(pair in self.s.rates)
+            if newstore < self.s.rates[pair]['stored']:
+                newstore = self.s.rates[pair]['stored']
+            #print(laststore, newstore)
+            self.assertTrue(laststore != newstore)
+        self.ioloop.stop()
+    def testCompareOrderbookTicker(self):
+        self.runCheck(self.checkCompareOrderbookTicker)
 
 if __name__ == '__main__':
     t = TestMiraiEx()

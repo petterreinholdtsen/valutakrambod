@@ -5,9 +5,9 @@
 import decimal
 import simplejson
 import time
+import tornado.ioloop
 import unittest
-
-from tornado import ioloop
+import urllib
 
 from valutakrambod.services import Orderbook
 from valutakrambod.services import Service
@@ -91,13 +91,22 @@ Run simple self test.
 """
     def setUp(self):
         self.s = Bl3p()
-    def testCurrentRates(self):
-        res = self.s.currentRates()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+    async def checkCurrentRates(self):
+        res = await self.s.currentRates()
         pair = ('BTC', 'EUR')
         self.assertTrue(pair in res)
         ask = res[pair]['ask']
         bid = res[pair]['bid']
         self.assertTrue(ask >= bid)
+        self.ioloop.stop()
+    def testCurrentRates(self):
+        self.runCheck(self.checkCurrentRates)
     def testWebsocket(self):
         """Test websocket subscription of updates.
 
@@ -108,12 +117,12 @@ Run simple self test.
                   service.rates[pair]['bid'],
                   time.time() - service.rates[pair]['stored'] ,
             )
+            self.ioloop.stop()
         self.s.subscribe(printUpdate)
         c = self.s.websocket()
         c.connect()
-        io_loop = ioloop.IOLoop.current()
-        io_loop.call_later(10, io_loop.stop)
-        io_loop.start()
+        self.ioloop.call_later(10, self.ioloop.stop)
+        self.ioloop.start()
 
 if __name__ == '__main__':
     t = TestBl3p()
