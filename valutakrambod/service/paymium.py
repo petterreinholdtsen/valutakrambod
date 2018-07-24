@@ -4,7 +4,7 @@
 
 import time
 import unittest
-from tornado import ioloop
+import tornado.ioloop
 
 from valutakrambod.services import Service
 from valutakrambod.services import Orderbook
@@ -13,7 +13,8 @@ from valutakrambod.socketio import SocketIOClient
 
 class Paymium(Service):
     """Query the Paymium API.  Documentation is available from
-https://github.com/Paymium/api-documentation/#ticker
+https://github.com/Paymium/api-documentation/ and
+https://github.com/Paymium/api-documentation/blob/master/WEBSOCKETS.md.
 
     """
     baseurl = "https://paymium.com/api/v1/data/"
@@ -127,15 +128,24 @@ Run simple self test of the Paymium service class.
 """
     def setUp(self):
         self.s = Paymium()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
 
-    def testFetchTicker(self):
-        res = self.s._fetchTicker()
+    async def checkFetchTicker(self):
+        res = await self.s._fetchTicker()
         for pair in self.s.ratepairs():
             self.assertTrue(pair in res)
+        self.ioloop.stop()
+    def testFetchTicker(self):
+        self.runCheck(self.checkFetchTicker)
 
-    def testFetchOrderbooks(self):
+    async def checkFetchOrderbooks(self):
         pairs = self.s.ratepairs()
-        self.s._fetchOrderbooks(pairs)
+        await self.s._fetchOrderbooks(pairs)
         for pair in pairs:
             self.assertTrue(pair in self.s.rates)
             self.assertTrue(pair in self.s.orderbooks)
@@ -144,6 +154,10 @@ Run simple self test of the Paymium service class.
             self.assertTrue(ask >= bid)
             spread = 100*(ask/bid-1)
             self.assertTrue(spread > 0 and spread < 5)
+        self.ioloop.stop()
+    def testFetchOrderbooks(self):
+        self.runCheck(self.checkFetchOrderbooks)
+
     def testWebsocket(self):
         """Test websocket subscription of updates.
 
@@ -155,12 +169,12 @@ Run simple self test of the Paymium service class.
                   time.time() - service.rates[pair]['when'] ,
                   time.time() - service.rates[pair]['stored'] ,
             )
+            self.ioloop.stop()
         self.s.subscribe(printUpdate)
         c = self.s.websocket()
         c.connect()
-        io_loop = ioloop.IOLoop.current()
-        io_loop.call_later(10, io_loop.stop)
-        io_loop.start()
+        self.ioloop.call_later(10, self.ioloop.stop)
+        self.ioloop.start()
 
 
 if __name__ == '__main__':

@@ -2,10 +2,10 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
-
 import configparser
-import dateutil
 import datetime
+import dateutil
+import tornado.ioloop
 import unittest
 
 from os.path import expanduser
@@ -29,7 +29,7 @@ https://1forge.com/forex-data-api .
             ('USD', 'EUR'),
             ('USD', 'NOK'),
             ]
-    def fetchRates(self, pairs = None):
+    async def fetchRates(self, pairs = None):
         apikey = self.confget('apikey', fallback=None)
         if apikey is None:
             raise Exception('1Forge require API key')
@@ -39,7 +39,7 @@ https://1forge.com/forex-data-api .
         pairstr = ','.join(map(lambda t: "%s%s" % (t[0], t[1]), pairs))
         url = "%squotes?pairs=%s&api_key=%s" % (self.baseurl, pairstr, apikey)
         #print(url)
-        j, r = self._jsonget(url)
+        j, r = await self._jsonget(url)
         #print(j)
         res = {}
         for r in j:
@@ -68,10 +68,20 @@ Run simple self test.
         self.config = configparser.ConfigParser()
         self.config.read(configpath)
         self.s.confinit(self.config)
-    def testFetchTicker(self):
-        res = self.s.fetchRates()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+
+    async def checkFetchTicker(self):
+        res = await self.s.fetchRates()
         for pair in self.s.ratepairs():
             self.assertTrue(pair in res)
+        self.ioloop.stop()
+    def testFetchTicker(self):
+        self.runCheck(self.checkFetchTicker)
 
 if __name__ == '__main__':
     t = TestOneForge()

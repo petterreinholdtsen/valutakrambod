@@ -6,12 +6,12 @@ import configparser
 import dateutil.parser
 import simplejson
 import time
+import tornado.ioloop
 import unittest
 
 from os.path import expanduser
 
 from decimal import Decimal
-from tornado import ioloop
 
 from valutakrambod.services import Orderbook
 from valutakrambod.services import Service
@@ -142,14 +142,24 @@ Run simple self test.
         self.config = configparser.ConfigParser()
         self.config.read(configpath)
         self.s.confinit(self.config)
-    def testCurrentRates(self):
-        res = self.s.currentRates()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+
+    async def checkCurrentRates(self):
+        res = await self.s.currentRates()
         pairs = self.s.ratepairs()
         for pair in pairs:
             self.assertTrue(pair in res)
             ask = res[pair]['ask']
             bid = res[pair]['bid']
             self.assertTrue(ask >= bid)
+    def testCurrentRates(self):
+        self.runCheck(self.checkCurrentRates)
+
     def testWebsocket(self):
         """Test websocket subscription of updates.
 
@@ -161,12 +171,12 @@ Run simple self test.
                   time.time() - service.rates[pair]['when'] ,
                   time.time() - service.rates[pair]['stored'] ,
             )
-        #self.s.subscribe(printUpdate)
+            self.ioloop.stop()
+        self.s.subscribe(printUpdate)
         c = self.s.websocket()
         c.connect()
-        io_loop = ioloop.IOLoop.current()
-        io_loop.call_later(10, io_loop.stop)
-        io_loop.start()
+        self.ioloop.call_later(10, self.ioloop.stop)
+        self.ioloop.start()
 
 if __name__ == '__main__':
     t = TestHitbtc()
