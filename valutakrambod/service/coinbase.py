@@ -3,6 +3,7 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import unittest
+import tornado.ioloop
 
 from decimal import Decimal
 from valutakrambod.services import Service
@@ -48,13 +49,22 @@ Run simple self test.
 """
     def setUp(self):
         self.s = Coinbase()
-    def testCurrentRates(self):
-        res = self.s.currentRates()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+    async def checkCurrentRates(self):
+        res = await self.s.currentRates()
         for pair in self.s.ratepairs():
             self.assertTrue(pair in res)
             ask = res[pair]['ask']
             bid = res[pair]['bid']
             self.assertTrue(ask >= bid)
+        self.ioloop.stop()
+    def testCurrentRates(self):
+        self.runCheck(self.checkCurrentRates)
 
 if __name__ == '__main__':
     t = TestCoinbase()

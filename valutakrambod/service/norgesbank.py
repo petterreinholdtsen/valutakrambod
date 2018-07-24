@@ -5,6 +5,7 @@
 import dateutil
 import re
 import unittest
+import tornado.ioloop
 
 from decimal import Decimal
 from lxml import etree
@@ -72,8 +73,14 @@ Run simple self test.
 """
     def setUp(self):
         self.s = Norgesbank()
-    def testCurrentRates(self):
-        res = self.s.currentRates()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+    async def checkCurrentRates(self):
+        res = await self.s.currentRates()
         for pair in self.s.ratepairs():
             self.assertTrue(pair in res)
             ask = res[pair]['ask']
@@ -81,6 +88,9 @@ Run simple self test.
             self.assertTrue(ask >= bid)
             spread = 100*(ask/bid-1)
             self.assertTrue(spread >= 0 and spread < 5)
+        self.ioloop.stop()
+    def testCurrentRates(self):
+        self.runCheck(self.checkCurrentRates)
 
 if __name__ == '__main__':
     t = TestNorgesbank()

@@ -6,6 +6,7 @@ import configparser
 import simplejson
 import time
 import unittest
+import tornado.ioloop
 
 from decimal import Decimal
 from os.path import expanduser
@@ -17,7 +18,8 @@ from valutakrambod.websocket import WebSocketClient
 
 class Bitstamp(Service):
     """Query the Bitstamp API.  Documentation is available from
-https://www.bitstamp.com/help/api#general-usage .
+https://www.bitstamp.com/help/api#general-usage and
+https://www.bitstamp.net/api/ .
 
 https://www.bitstamp.net/websocket/, https://pusher.com/docs and
 https://pusher.com/docs/pusher_protocol#websocket-connection document
@@ -127,31 +129,41 @@ Run simple self test.
         self.config = configparser.ConfigParser()
         self.config.read(configpath)
         self.s.confinit(self.config)
-    def testCurrentRates(self):
-        res = self.s.currentRates()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def runCheck(self, check):
+        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+    async def checkCurrentRates(self):
+        res = await self.s.currentRates()
         pairs = self.s.ratepairs()
         for pair in pairs:
             self.assertTrue(pair in res)
             ask = res[pair]['ask']
             bid = res[pair]['bid']
             self.assertTrue(ask >= bid)
+        self.ioloop.stop()
+    def testCurrentRates(self):
+        self.runCheck(self.checkCurrentRates)
+
     def testWebsocket(self):
         """Test websocket subscription of updates.
 
         """
-        def printUpdate(service, pair):
+        def printUpdate(service, pair, changed):
             print(pair,
                   service.rates[pair]['ask'],
                   service.rates[pair]['bid'],
                   time.time() - service.rates[pair]['when'] ,
                   time.time() - service.rates[pair]['stored'] ,
             )
-        #self.s.subscribe(printUpdate)
+            self.ioloop.stop()
+        self.s.subscribe(printUpdate)
         c = self.s.websocket()
         c.connect()
-        io_loop = ioloop.IOLoop.current()
-        io_loop.call_later(10, io_loop.stop)
-        io_loop.start()
+        self.ioloop.call_later(10, self.ioloop.stop)
+        self.ioloop.start()
 
 if __name__ == '__main__':
     t = TestBitstamp()
