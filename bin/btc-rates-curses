@@ -24,6 +24,14 @@ class CursesViewer(object):
         configpath = expanduser('~/.config/btc-rates/config.ini')
         self.config = configparser.ConfigParser()
         self.config.read(configpath)
+        self.notes = []
+    def addnote(self, msg, lifetime=10):
+        now = time.time()
+        self.notes.append((msg, now+lifetime))
+    def expirenotes(self):
+        # Remove expired notes
+        now = time.time()
+        self.notes = list(filter(lambda x: x[1] > now, self.notes))
     def logerror(self, msg):
         now = time.time()
         self.errlog.append((now, msg))
@@ -66,6 +74,14 @@ class CursesViewer(object):
             )
             self.stdscr.addstr( line, 0, s)
             line = line + 1
+
+        line = line + 1
+        for note, expire in lines[-1::-1]:
+            if line < maxy - 1:
+                self.stdscr.addstr( line, 0, note)
+                line = line + 1
+        self.expirenotes()
+
         line = line + 1
         for when, error in self.errlog[-1::-1]:
             if line < maxy - 1:
@@ -85,12 +101,8 @@ class CursesViewer(object):
         )
     async def runRefresh(self, service):
         try:
-            msg = "Updating %s" % service.servicename()
-            self.stdscr.addstr( 0, 0, msg)
-            self.stdscr.refresh()
+            self.addnote("Updating %s" % service.servicename(), 10)
             await service.fetchRates(service.wantedpairs)
-            self.stdscr.addstr( 0, 0, ' ' * len(msg))
-            self.stdscr.refresh()
         except Exception as e:
             self.logerror("%s fetch: %s" % (service.servicename(), str(e)))
             # FIXME flag service as having problems?
@@ -120,11 +132,7 @@ from the current period and not too short.
         self.services = []
         for e in valutakrambod.service.knownServices():
             service = e(self.currencies)
-
-            msg = "Enabling %s" % service.servicename()
-            self.stdscr.addstr( 0, 0, msg)
-            self.stdscr.refresh()
-
+            self.addnote("Enabling %s" % service.servicename(), 5)
             service.confinit(self.config)
             self.services.append(service)
             service.subscribe(self.newdata)
