@@ -76,7 +76,7 @@ class CursesViewer(object):
             line = line + 1
 
         line = line + 1
-        for note, expire in lines[-1::-1]:
+        for note, expire in self.notes[-1::-1]:
             if line < maxy - 1:
                 self.stdscr.addstr( line, 0, note)
                 line = line + 1
