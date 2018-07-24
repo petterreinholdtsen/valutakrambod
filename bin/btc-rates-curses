@@ -38,7 +38,7 @@ class CursesViewer(object):
         line = 2
         now = time.time()
         s = "%15s %-6s %-11s %-11s %-5s  %4s %6s" % (
-            "Name", "Pair", "Ask", "Bid", "Spr", "Ftcd", "Age",
+            "Name", "Pair", "Bid", "Ask", "Spr", "Ftcd", "Age",
             )
         self.stdscr.addstr( 1, 0, s)
         for entry in self.rates.keys():
@@ -57,8 +57,8 @@ class CursesViewer(object):
                 entry[1],
                 pair[0],
                 pair[1],
-                askprice,
                 bidprice,
+                askprice,
                 spread,
                 now - stored,
                 age,
