@@ -35,5 +35,6 @@ setup(
     tests_require=[
     ],
     packages=find_packages(),
+    scripts=['bin/btc-rates'],
     include_package_data=True,
     zip_safe=False)
