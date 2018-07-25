@@ -1,6 +1,6 @@
 python-dateutil
 sortedcontainers
-tornado >=4.4
+tornado
 websocket-client
 simplejson
 lxml
