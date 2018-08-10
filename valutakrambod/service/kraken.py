@@ -139,7 +139,7 @@ loaded from the stored configuration.
             body, response = await self.service._post(url, datastr, headers)
             return body, response
         async def _query_private(self, method, args):
-            url = "%sBalance" % self.baseurl
+            url = "%s%s" % (self.baseurl, method)
             body, response = await self._post(url, args)
             j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
             print(j)
