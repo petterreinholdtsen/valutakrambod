@@ -205,13 +205,13 @@ This is example output from the API call:
             }
             res = await self.service._query_private('AddOrder', args)
             print(res)
-            txid = res['result']['txid']
-            txdesc = res['result']['descr']
+            txid = res['txid']
+            txdesc = res['descr']
             return txid
-        def cancelorder(self, orderref):
-            raise NotImplementedError()
+        async def cancelorder(self, orderref):
             args = {'txid' : orderref}
             res = self.service._query_private('CancelOrder', args)
+            return res
         def cancelallorders(self):
             raise NotImplementedError()
         async def orders(self, market= None):
@@ -279,8 +279,10 @@ Run simple self test.
         print("trying to place order")
         if True or ('EUR' in b and b['EUR'] > 0.1):
             pairstr = self.s._makepair('BTC', 'EUR')
-            j = await t.placeorder(pairstr, Orderbook.SIDE_BID,
+            tx = await t.placeorder(pairstr, Orderbook.SIDE_BID,
                                    0.1, 0.1, immediate=False)
+            print(tx)
+            j = await t.cancelorder(tx)
             print(j)
         else:
             print("unable to place 1 EUR order, lacking funds")
