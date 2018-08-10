@@ -60,7 +60,7 @@ https://www.kraken.com/help/api#general-usage .
         nonce = self.confgetint('lastnonce', fallback=0) + 1
         # Time based alternative
         #nonce = int(1000*time.time())
-        nonce = int(time.time())
+        nonce = int(time.time()*10)
         return nonce
     async def _signedpost(self, url, data):
         urlpath = urllib.parse.urlparse(url).path.encode('UTF-8')
