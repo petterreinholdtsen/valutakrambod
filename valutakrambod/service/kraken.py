@@ -10,6 +10,7 @@ import simplejson
 import time
 import unittest
 import urllib
+import urllib.parse
 import tornado.ioloop
 
 from decimal import Decimal
@@ -34,6 +35,7 @@ https://www.kraken.com/help/api#general-usage .
 #        'BCH'
         }
     baseurl = "https://api.kraken.com/0/public/"
+    privatebaseurl = "https://api.kraken.com/0/private/"
     def servicename(self):
         return "Kraken"
 
@@ -54,6 +56,55 @@ https://www.kraken.com/help/api#general-usage .
         return asset
     def _makepair(self, f, t):
         return "%s%s" % (self._currencyMap(f), self._currencyMap(t))
+    def _nonce(self):
+        nonce = self.confgetint('lastnonce', fallback=0) + 1
+        # Time based alternative
+        #nonce = int(1000*time.time())
+        nonce = int(time.time())
+        return nonce
+    async def _signedpost(self, url, data):
+        urlpath = urllib.parse.urlparse(url).path.encode('UTF-8')
+        data['nonce'] = self._nonce()
+        datastr = urllib.parse.urlencode(data)
+
+        # API-Sign = Message signature using HMAC-SHA512 of (URI
+        # path + SHA256(nonce + POST data)) and base64 decoded
+        # secret API key
+        noncestr = str(data['nonce'])
+        datahash = (noncestr + datastr).encode('UTF-8')
+        message = urlpath + hashlib.sha256(datahash).digest()
+        msgsignature = hmac.new(base64.b64decode(self.confget('apisecret').encode('UTF-8')),
+                                message,
+                                hashlib.sha512)
+        sign = base64.b64encode(msgsignature.digest()).replace(b'\n', b'')
+        headers = {
+            'API-Key' : self.confget('apikey'),
+            'API-Sign': sign,
+            }
+        body, response = await self._post(url, datastr, headers)
+        return body, response
+    async def _query_private(self, method, args):
+        url = "%s%s" % (self.privatebaseurl, method)
+        body, response = await self._signedpost(url, args)
+        j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
+        #print(j)
+        if 0 != len(j['error']):
+            exceptionmap = {
+                'EGeneral:Internal error' : Exception,
+                'EAPI:Invalid nonce' : Exception,
+            }
+            e = Exception
+            if j['error'][0] in exceptionmap:
+                e = exceptionmap[j['error'][0]]
+            raise e('unable to query %s: %s' % (method, j['error']))
+        return j['result']
+    async def _query_public(self, method, args):
+        url = "%s%s" % (self.baseurl, method)
+        
+        if args:
+            url = "%s?%s" % (url, urllib.parse.urlencode(args))
+        j, r = await self._jsonget(url)
+        return j
     async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.wantedpairs
@@ -65,9 +116,7 @@ https://www.kraken.com/help/api#general-usage .
         res = {}
         for pair in pairs:
             pairstr = self._makepair(pair[0], pair[1])
-            url = "%sDepth?pair=%s" % (self.baseurl, pairstr)
-            #print(url)
-            j, r = await self._jsonget(url)
+            j = await self._query_public('Depth', {'pair' : pairstr})
             #print(j)
             o = Orderbook()
             for side in ('asks', 'bids'):
@@ -91,16 +140,13 @@ https://www.kraken.com/help/api#general-usage .
         for p in pairs:
             f = p[0]
             t = p[1]
-            pair= self._makepair(f, t)
-            #print(pair)
-            url = "%sTicker?pair=%s" % (self.baseurl, pair)
-            #print(url)
-            j, r = await self._jsonget(url)
-            #print(j)
+            pairstr= self._makepair(f, t)
+            #print(pairstr)
+            j = await self._query_public('Ticker', {'pair' : pairstr})
             if 0 != len(j['error']):
                 raise Exception(j['error'])
-            ask = Decimal(j['result'][pair]['a'][0])
-            bid = Decimal(j['result'][pair]['b'][0])
+            ask = Decimal(j['result'][pairstr]['a'][0])
+            bid = Decimal(j['result'][pairstr]['b'][0])
             self.updateRates(p, ask, bid, None)
             res[p] = self.rates[p]
         return res
@@ -110,7 +156,6 @@ https://www.kraken.com/help/api#general-usage .
         return None
 
     class KrakenTrading(Trading):
-        baseurl = "https://api.kraken.com/0/private/"
         def __init__(self, service):
             self.service = service
         def setkeys(self, apikey, apisecret):
@@ -121,49 +166,6 @@ loaded from the stored configuration.
             """
             self.service.confset('apikey', apikey)
             self.service.confset('apisecret', apisecret)
-        def _nonce(self):
-            nonce = self.service.confgetint('lastnonce', fallback=0) + 1
-            # Time based alternative
-            #nonce = int(1000*time.time())
-            nonce = int(time.time())
-            return nonce
-
-        async def _post(self, url, data):
-            urlpath = urllib.parse.urlparse(url).path.encode('UTF-8')
-            data['nonce'] = self._nonce()
-            datastr = urllib.parse.urlencode(data)
-
-            # API-Sign = Message signature using HMAC-SHA512 of (URI
-            # path + SHA256(nonce + POST data)) and base64 decoded
-            # secret API key
-            noncestr = str(data['nonce'])
-            datahash = (noncestr + datastr).encode('UTF-8')
-            message = urlpath + hashlib.sha256(datahash).digest()
-            msgsignature = hmac.new(base64.b64decode(self.service.confget('apisecret').encode('UTF-8')),
-                                    message,
-                                    hashlib.sha512)
-            sign = base64.b64encode(msgsignature.digest()).replace(b'\n', b'')
-            headers = {
-                'API-Key' : self.service.confget('apikey'),
-                'API-Sign': sign,
-                }
-            body, response = await self.service._post(url, datastr, headers)
-            return body, response
-        async def _query_private(self, method, args):
-            url = "%s%s" % (self.baseurl, method)
-            body, response = await self._post(url, args)
-            j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
-            print(j)
-            if 0 != len(j['error']):
-                exceptionmap = {
-                    'EGeneral:Internal error' : Exception,
-                    'EAPI:Invalid nonce' : Exception,
-                }
-                e = Exception
-                if j['error'][0] in exceptionmap:
-                    e = exceptionmap[j['error'][0]]
-                raise e('unable to fetch balance: %s' % j['error'])
-            return j['result']
         async def balance(self):
             """Fetch balance and restructure it to standardized return format,
 using standard currency codes.  The return format is a hash with
@@ -175,7 +177,7 @@ This is example output from the API call:
 {'error': [], 'result': {'KFEE': '0.00', 'BCH': '0.1', 'ZEUR': '1.234', 'XXLM': '1.32', 'XXBT': '1.24'}}
 
         """
-            assets = await self._query_private('Balance', {})
+            assets = await self.service._query_private('Balance', {})
             res = {}
             for asset in assets.keys():
                 c = self.service._revCurrencyMap(asset)
@@ -200,14 +202,14 @@ This is example output from the API call:
 #                'oflags' : ,
 #                'starttm' : ,
             }
-            res = self._query_private('AddOrder', args)
+            res = self.service._query_private('AddOrder', args)
             txid = res['result']['txid']
             txdesc = res['result']['descr']
             return txid
         def cancelorder(self, orderref):
             raise NotImplementedError()
             args = {'txid' : orderref}
-            res = self._query_private('CancelOrder', args)
+            res = self.service._query_private('CancelOrder', args)
         def cancelallorders(self):
             raise NotImplementedError()
         async def orders(self, market= None):
@@ -216,7 +218,7 @@ This is example output from the API call:
                 'trades' : True,
 #                'userref' : ,
             }
-            res = await self._query_private('OpenOrders', args)
+            res = await self.service._query_private('OpenOrders', args)
             print(res)
     def trading(self):
         if self.activetrader is None:
