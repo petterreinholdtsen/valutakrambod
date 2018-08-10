@@ -50,8 +50,11 @@ Run simple self test.
     def setUp(self):
         self.s = Coinbase()
         self.ioloop = tornado.ioloop.IOLoop.current()
+    def checkTimeout(self):
+        print("check timed out")
+        self.ioloop.stop()
     def runCheck(self, check):
-        to = self.ioloop.call_later(10, self.ioloop.stop) # Add timeout
+        to = self.ioloop.call_later(30, self.checkTimeout)
         self.ioloop.add_callback(check)
         self.ioloop.start()
         self.ioloop.remove_timeout(to)
