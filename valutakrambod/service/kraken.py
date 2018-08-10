@@ -194,7 +194,7 @@ This is example output from the API call:
                     OrderBook.SIDE_BID : 'buy',
                 }[side]
             args = {
-                'pair' : 'XXBTZUSD',
+                'pair' : markedpair,
                 'type' : type,
                 'ordertype' : ordertype,
                 'price' : str(price),
@@ -213,7 +213,10 @@ This is example output from the API call:
         def cancelallorders(self):
             raise NotImplementedError()
         async def orders(self, market= None):
-            raise NotImplementedError()
+            """Return the currently open orders in standardized format.
+
+FIXME The format is yet to be standardized.
+"""
             args = {
                 'trades' : True,
 #                'userref' : ,
@@ -267,8 +270,13 @@ Run simple self test.
         if self.s.confget('apikey', fallback=None) is None:
             return
         t = self.s.trading()
-        print(await t.balance())
+        b = await t.balance()
+        print(b)
         print(await t.orders())
+        if b['EUR'] > 1:
+            t.placeorder('XXBTZEUR', OrderBook.SIDE_BID, 0.1, 0.1, immediate=False)
+        else:
+            print("unable to place 1 EUR order, lacking funds")
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)
