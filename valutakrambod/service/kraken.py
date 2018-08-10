@@ -92,6 +92,7 @@ https://www.kraken.com/help/api#general-usage .
             exceptionmap = {
                 'EGeneral:Internal error' : Exception,
                 'EAPI:Invalid nonce' : Exception,
+                'EOrder:Insufficient funds' : Exception,
             }
             e = Exception
             if j['error'][0] in exceptionmap:
@@ -183,18 +184,18 @@ This is example output from the API call:
                 c = self.service._revCurrencyMap(asset)
                 res[c] = Decimal(assets[asset])
             return res
-        def placeorder(self, marketpair, side, price, volume, immediate=False):
-            raise NotImplementedError()
-            if prices is None:
+        async def placeorder(self, marketpair, side, price, volume, immediate=False):
+#            raise NotImplementedError()
+            if price is None:
                 ordertype = 'market'
             else:
-                ordertypes = 'limit'
-                type = {
-                    OrderBook.SIDE_ASK : 'sell',
-                    OrderBook.SIDE_BID : 'buy',
-                }[side]
+                ordertype = 'limit'
+            type = {
+                    Orderbook.SIDE_ASK : 'sell',
+                    Orderbook.SIDE_BID : 'buy',
+            }[side]
             args = {
-                'pair' : markedpair,
+                'pair' : marketpair,
                 'type' : type,
                 'ordertype' : ordertype,
                 'price' : str(price),
@@ -202,7 +203,8 @@ This is example output from the API call:
 #                'oflags' : ,
 #                'starttm' : ,
             }
-            res = self.service._query_private('AddOrder', args)
+            res = await self.service._query_private('AddOrder', args)
+            print(res)
             txid = res['result']['txid']
             txdesc = res['result']['descr']
             return txid
@@ -273,8 +275,9 @@ Run simple self test.
         b = await t.balance()
         print(b)
         print(await t.orders())
-        if b['EUR'] > 1:
-            t.placeorder('XXBTZEUR', OrderBook.SIDE_BID, 0.1, 0.1, immediate=False)
+        if 'EUR' in b and b['EUR'] > 0.1:
+            await t.placeorder('XXBTZEUR', Orderbook.SIDE_BID,
+                               0.1, 0.1, immediate=False)
         else:
             print("unable to place 1 EUR order, lacking funds")
         self.ioloop.stop()
