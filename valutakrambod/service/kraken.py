@@ -270,14 +270,18 @@ Run simple self test.
     async def checkTradingConnection(self):
         # Unable to test without API access credentials in the config
         if self.s.confget('apikey', fallback=None) is None:
+            print("not testing trading")
             return
         t = self.s.trading()
         b = await t.balance()
         print(b)
         print(await t.orders())
-        if 'EUR' in b and b['EUR'] > 0.1:
-            await t.placeorder('XXBTZEUR', Orderbook.SIDE_BID,
-                               0.1, 0.1, immediate=False)
+        print("trying to place order")
+        if True or ('EUR' in b and b['EUR'] > 0.1):
+            pairstr = self.s._makepair('BTC', 'EUR')
+            j = await t.placeorder(pairstr, Orderbook.SIDE_BID,
+                                   0.1, 0.1, immediate=False)
+            print(j)
         else:
             print("unable to place 1 EUR order, lacking funds")
         self.ioloop.stop()
