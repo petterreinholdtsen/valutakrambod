@@ -286,7 +286,7 @@ Run simple self test.
             for tx in txs:
                 print("cancelling order %s" % tx)
                 j = await t.cancelorder(tx)
-                print("done cancelling: %s", str(j))
+                print("done cancelling: %s" % str(j))
                 self.assertTrue('count' in j and j['count'] == 1)
         else:
             print("unable to place 1 EUR order, lacking funds")
