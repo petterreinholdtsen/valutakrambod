@@ -25,7 +25,13 @@ Query the Kraken API.  Documentation is available from
 https://www.kraken.com/help/api#general-usage .
 """
     keymap = {
-        'BTC' : 'XBT',
+        'BTC' : 'XXBT',
+        'XLM' : 'XXLM',
+        'EUR' : 'ZEUR',
+        'USD' : 'ZUSD',
+# Pass these through unchanged
+#        'KFEE'
+#        'BCH'
         }
     baseurl = "https://api.kraken.com/0/public/"
     def servicename(self):
@@ -41,8 +47,13 @@ https://www.kraken.com/help/api#general-usage .
             return self.keymap[currency]
         else:
             return currency
+    def _revCurrencyMap(self, asset):
+        for stdasset in self.keymap.keys():
+            if asset == self.keymap[stdasset]:
+                return stdasset
+        return asset
     def _makepair(self, f, t):
-        return "X%sZ%s" % (self._currencyMap(f), self._currencyMap(t))
+        return "%s%s" % (self._currencyMap(f), self._currencyMap(t))
     async def fetchRates(self, pairs = None):
         if pairs is None:
             pairs = self.wantedpairs
@@ -154,12 +165,22 @@ loaded from the stored configuration.
                 raise e('unable to fetch balance: %s' % j['error'])
             return j['result']
         async def balance(self):
-            raise NotImplementedError()
-            url = "%sBalance" % self.baseurl
+            """Fetch balance and restructure it to standardized return format,
+using standard currency codes.  The return format is a hash with
+currency code as the key, and a Decimal() value representing the
+current balance.
+
+This is example output from the API call:
+
+{'error': [], 'result': {'KFEE': '0.00', 'BCH': '0.1', 'ZEUR': '1.234', 'XXLM': '1.32', 'XXBT': '1.24'}}
+
+        """
             assets = await self._query_private('Balance', {})
-            for asset in assets:
-                print(asset)
-            return assets
+            res = {}
+            for asset in assets.keys():
+                c = self.service._revCurrencyMap(asset)
+                res[c] = Decimal(assets[asset])
+            return res
         def placeorder(self, marketpair, side, price, volume, immediate=False):
             raise NotImplementedError()
             if prices is None:
