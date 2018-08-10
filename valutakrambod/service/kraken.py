@@ -205,9 +205,9 @@ This is example output from the API call:
             }
             res = await self.service._query_private('AddOrder', args)
             print(res)
-            txid = res['txid']
+            txids = res['txid']
             txdesc = res['descr']
-            return txid
+            return txids
         async def cancelorder(self, orderref):
             args = {'txid' : orderref}
             res = await self.service._query_private('CancelOrder', args)
@@ -277,13 +277,17 @@ Run simple self test.
         print(b)
         print(await t.orders())
         print("trying to place order")
-        if True or ('EUR' in b and b['EUR'] > 0.1):
+        if 'EUR' in b and b['EUR'] > 0.1:
+            print("placing order")
             pairstr = self.s._makepair('BTC', 'EUR')
-            tx = await t.placeorder(pairstr, Orderbook.SIDE_BID,
+            txs = await t.placeorder(pairstr, Orderbook.SIDE_BID,
                                    0.1, 0.1, immediate=False)
-            print(tx)
-            j = await t.cancelorder(tx)
-            print(j)
+            print("placed orders: %s" % txs)
+            for tx in txs:
+                print("cancelling order %s" % tx)
+                j = await t.cancelorder(tx)
+                print("done cancelling: %s", str(j))
+                self.assertTrue('count' in j and j['count'] == 1)
         else:
             print("unable to place 1 EUR order, lacking funds")
         self.ioloop.stop()
