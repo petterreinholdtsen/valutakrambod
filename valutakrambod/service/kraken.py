@@ -210,7 +210,7 @@ This is example output from the API call:
             return txid
         async def cancelorder(self, orderref):
             args = {'txid' : orderref}
-            res = self.service._query_private('CancelOrder', args)
+            res = await self.service._query_private('CancelOrder', args)
             return res
         def cancelallorders(self):
             raise NotImplementedError()
