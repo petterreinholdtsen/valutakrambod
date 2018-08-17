@@ -200,7 +200,8 @@ Run simple self test.
     async def checkTradingConnection(self):
         # Unable to test without API access credentials in the config
         if self.s.confget('apikey', fallback=None) is None:
-            print("not testing trading")
+            print("no apikey for %s in ini file, not testing trading" %
+                  self.s.servicename())
             self.ioloop.stop()
             return
         t = self.s.trading()
