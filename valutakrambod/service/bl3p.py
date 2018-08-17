@@ -2,15 +2,22 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+import base64
+import configparser
 import decimal
+import hashlib
+import hmac
 import simplejson
 import time
 import tornado.ioloop
 import unittest
 import urllib
 
+from os.path import expanduser
+
 from valutakrambod.services import Orderbook
 from valutakrambod.services import Service
+from valutakrambod.services import Trading
 from valutakrambod.websocket import WebSocketClient
 
 class Bl3p(Service):
@@ -19,6 +26,33 @@ Query the Bl3p API.  Documentation is available from
 https://bl3p.eu/api .
 """
     baseurl = "https://api.bl3p.eu/1/"
+    async def _signedpost(self, url, data):
+        path = url.replace(self.baseurl, '')
+        datastr = urllib.parse.urlencode(data)
+
+        # API-Sign = Message signature using HMAC-SHA512 of (URI path +
+        # null terminator + POST data) and base64 decoded secret API key
+        message = "%s%c%s" % (path, 0x00, datastr)
+        print(message)
+        privkey_bin = base64.b64decode(self.confget('apisecret'))
+        msgsignature = hmac.new(privkey_bin, message.encode(), hashlib.sha512).digest()
+        sign = base64.b64encode(msgsignature)
+        headers = {
+            'Rest-Key' : self.confget('apikey'),
+            'Rest-Sign': sign.decode(),
+        }
+
+        body, response = await self._post(url, datastr, headers)
+        return body, response
+    async def _query_private(self, method, args):
+        url = "%s%s" % (self.baseurl, method)
+        body, response = await self._signedpost(url, args)
+        j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
+        print(j)
+        if 'success' != j['result']:
+            raise Exception('unable to query %s: %s' % (method, j['error']))
+        return j['data']
+
     def servicename(self):
         return "Bl3p"
 
@@ -85,12 +119,49 @@ https://bl3p.eu/api .
     def websocket(self):
         return self.WSClient(self)
 
+    class Bl3pTrading(Trading):
+        def __init__(self, service):
+            self.service = service
+        def setkeys(self, apikey, apisecret):
+            """Add the user specific information required by the trading API in
+clear text to the current configuration.  These settings can also be
+loaded from the stored configuration.
+
+            """
+            self.service.confset('apikey', apikey)
+            self.service.confset('apisecret', apisecret)
+        async def balance(self):
+            """Fetch balance and restructure it to standardized return format,
+using standard currency codes.  The return format is a hash with
+currency code as the key, and a Decimal() value representing the
+current balance.
+
+This is example output from the API call:
+
+N/A
+
+"""
+            assets = await self.service._query_private('GENMKT/money/info', {})
+            print(assets)
+            res = {}
+            for asset in assets['wallets'].keys():
+                res[asset] = decimal.Decimal(assets['wallets'][asset]['balance']['value'])
+            return res
+    def trading(self):
+        if self.activetrader is None:
+            self.activetrader = self.Bl3pTrading(self)
+        return self.activetrader
+
 class TestBl3p(unittest.TestCase):
     """
 Run simple self test.
 """
     def setUp(self):
         self.s = Bl3p()
+        configpath = expanduser('~/.config/valutakrambod/testsuite.ini')
+        self.config = configparser.ConfigParser()
+        self.config.read(configpath)
+        self.s.confinit(self.config)
         self.ioloop = tornado.ioloop.IOLoop.current()
     def checkTimeout(self):
         print("check timed out")
@@ -110,7 +181,7 @@ Run simple self test.
         self.ioloop.stop()
     def testCurrentRates(self):
         self.runCheck(self.checkCurrentRates)
-    def testWebsocket(self):
+    async def checkWebsocket(self):
         """Test websocket subscription of updates.
 
         """
@@ -124,9 +195,36 @@ Run simple self test.
         self.s.subscribe(printUpdate)
         c = self.s.websocket()
         c.connect()
-        self.ioloop.call_later(10, self.ioloop.stop)
-        self.ioloop.start()
-
+    def testWebsocket(self):
+        self.runCheck(self.checkWebsocket)
+    async def checkTradingConnection(self):
+        # Unable to test without API access credentials in the config
+        if self.s.confget('apikey', fallback=None) is None:
+            print("not testing trading")
+            self.ioloop.stop()
+            return
+        t = self.s.trading()
+        b = await t.balance()
+        print(b)
+        return # FIXME The rest is not implemented
+        print(await t.orders())
+        print("trying to place order")
+        if 'EUR' in b and b['EUR'] > 0.1:
+            print("placing order")
+            pairstr = self.s._makepair('BTC', 'EUR')
+            txs = await t.placeorder(pairstr, Orderbook.SIDE_BID,
+                                   0.1, 0.1, immediate=False)
+            print("placed orders: %s" % txs)
+            for tx in txs:
+                print("cancelling order %s" % tx)
+                j = await t.cancelorder(tx)
+                print("done cancelling: %s" % str(j))
+                self.assertTrue('count' in j and j['count'] == 1)
+        else:
+            print("unable to place 1 EUR order, lacking funds")
+        self.ioloop.stop()
+    def testTradingConnection(self):
+        self.runCheck(self.checkTradingConnection)
 if __name__ == '__main__':
     t = TestBl3p()
     unittest.main()
