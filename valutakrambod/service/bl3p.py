@@ -147,6 +147,14 @@ N/A
             for asset in assets['wallets'].keys():
                 res[asset] = decimal.Decimal(assets['wallets'][asset]['balance']['value'])
             return res
+        async def orders(self, market= None):
+            """Return the currently open orders in standardized format.
+
+FIXME The format is yet to be standardized.
+
+"""
+            res = await self.service._query_private('%s/money/orders' % market, {})
+            print(res)
     def trading(self):
         if self.activetrader is None:
             self.activetrader = self.Bl3pTrading(self)
@@ -207,8 +215,9 @@ Run simple self test.
         t = self.s.trading()
         b = await t.balance()
         print(b)
+        print(await t.orders('BTCEUR'))
+        self.ioloop.stop()
         return # FIXME The rest is not implemented
-        print(await t.orders())
         print("trying to place order")
         if 'EUR' in b and b['EUR'] > 0.1:
             print("placing order")
