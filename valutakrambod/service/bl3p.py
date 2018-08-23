@@ -164,7 +164,7 @@ Using our set price to calculate amount for fixed fee, as our price
 have to be closed to the used price if our order is executed.
 
             """
-            return price * volume * Decimal(0.0025) + Decimal(0.01) * price
+            return price * volume * decimal.Decimal(0.0025) + decimal.Decimal(0.01) * price
     def trading(self):
         if self.activetrader is None:
             self.activetrader = self.Bl3pTrading(self)
