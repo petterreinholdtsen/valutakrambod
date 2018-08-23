@@ -225,11 +225,11 @@ FIXME The format is yet to be standardized.
             }
             res = await self.service._query_private('OpenOrders', args)
             print(res)
-    def estimatefee(self, side, price, volume):
-        """From https://www.kraken.com/help/fees, the max fee is 0.26%.
+        def estimatefee(self, side, price, volume):
+            """From https://www.kraken.com/help/fees, the max fee is 0.26%.
 
-        """
-        return price * volume * Decimal(0.0026)
+            """
+            return price * volume * Decimal(0.0026)
     def trading(self):
         if self.activetrader is None:
             self.activetrader = self.KrakenTrading(self)
