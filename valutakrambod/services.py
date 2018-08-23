@@ -65,6 +65,10 @@ class Trading(object):
     def orders(self, market= None):
         raise NotImplementedError()
     def estimatefee(self, side, price, volume):
+        """Return amount of fee for a transaction selling virtual currency
+volume for price.
+
+        """
         return 0.0
 
 class Service(object):
