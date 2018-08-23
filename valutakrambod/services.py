@@ -69,7 +69,7 @@ class Trading(object):
 volume for price.
 
         """
-        return 0.0
+        return decimal.Decimal(0.0)
 
 class Service(object):
     def __init__(self, currencies=None):
