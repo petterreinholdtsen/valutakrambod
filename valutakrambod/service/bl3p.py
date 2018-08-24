@@ -92,8 +92,6 @@ https://bl3p.eu/api .
             if url is None:
                 url = self.url
             super().connect(url)
-        def _on_connection_success(self):
-            pass
         def _on_message(self, msg):
             m = simplejson.loads(msg, use_decimal=True)
             #print(m)
