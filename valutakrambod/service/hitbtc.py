@@ -65,7 +65,7 @@ Query the Hitbtc API.
                 url = self.url
             super().connect(url)
         def _on_connection_success(self):
-            print("_on_connection_success()")
+            #print("_on_connection_success()")
             for p in self.service.ratepairs():
                 self.send({
                     "method": "subscribeOrderbook", # subscribeTicker
