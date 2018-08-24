@@ -160,6 +160,7 @@ Run simple self test.
             ask = res[pair]['ask']
             bid = res[pair]['bid']
             self.assertTrue(ask >= bid)
+        self.ioloop.stop()
     def testCurrentRates(self):
         self.runCheck(self.checkCurrentRates)
 
