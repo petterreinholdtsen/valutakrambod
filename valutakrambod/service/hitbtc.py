@@ -127,11 +127,6 @@ Query the Hitbtc API.
                     o.setupdated(time.time())
                     self.service.updateOrderbook(pair, o)
 
-        def _on_connection_close(self):
-            pass
-        def _on_connection_error(self, exception):
-            pass
-
 class TestHitbtc(unittest.TestCase):
     """
 Run simple self test.
