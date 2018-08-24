@@ -137,6 +137,15 @@ services to store configuration.
         raise NotImplementedError()
     def subscribe(self, callback):
         self.subscribers.append(callback)
+    async def _callFetchRates(self):
+        try:
+            await self.fetchRates()
+        except Exception as e:
+            self.logerror("%s fetchRates: %s" % (self.servicename(),
+                                                 str(e)))
+            raise
+    def requestUpdate(self):
+        tornado.ioloop.IOLoop.current().add_callback(self._callFetchRates)
     def periodicUpdate(self, mindelay = 30): # 30 seconds
         """Start periodic calls to fetchRates(), with the minimum delay in
 seconds specified in as an argument.  The default update frequency is
@@ -151,14 +160,7 @@ seconds specified in as an argument.  The default update frequency is
             self.periodic = None
         if 0 != mindelay:
             from functools import partial
-            async def periodicFetchRates(self):
-                try:
-                    await self.fetchRates()
-                except Exception as e:
-                    self.logerror("%s fetchRates: %s" % (self.servicename(),
-                                                         str(e)))
-                    raise
-            self.periodic =  tornado.ioloop.PeriodicCallback(partial(periodicFetchRates, self),
+            self.periodic =  tornado.ioloop.PeriodicCallback(self._callFetchRates,
                                                              mindelay * 1000)
             self.periodic.start()
 
