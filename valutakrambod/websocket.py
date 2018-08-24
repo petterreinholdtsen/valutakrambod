@@ -45,7 +45,7 @@ class WebSocketClient(object):
                                          headers=headers)
         ws_conn = websocket.websocket_connect(request,
                                               callback=self._connect_callback,
-                                              on_message_callback=self._on_message)
+                                              on_message_callback=self._read_message)
 
     def send(self, data):
         """Send message to the server
@@ -79,9 +79,7 @@ class WebSocketClient(object):
         else:
             self._on_connection_error(future.exception())
 
-
-    async def _read_message(self):
-        msg = await self._ws_connection.read_message()
+    def _read_message(self, msg):
         if msg is None:
             self.service.logerror("received empty websocket message from %s, reconnecting" %
                                   self.service.servicename())
@@ -97,7 +95,7 @@ class WebSocketClient(object):
 
     async def _read_messages(self):
         while self._ws_connection:
-            await self._read_message()
+            self._read_message(await self._ws_connection.read_message())
 
     def _on_message(self, msg):
         """This is called when new message is available from the server.
