@@ -110,10 +110,7 @@ class WebSocketClient(object):
     def _on_connection_close(self):
         """This is called when server closed the connection.
         """
-        self.service.logerror("connection closed for %s: %s" % (
-            self.service.servicename(), str(exception)
-        ))
-        pass
+        self.service.logerror("websocket connection closed for %s" % self.service.servicename())
 
     def _on_connection_error(self, exception):
         """This is called in case if connection to the server could
