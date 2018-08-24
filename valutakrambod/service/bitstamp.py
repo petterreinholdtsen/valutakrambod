@@ -113,6 +113,7 @@ the websocket API.
                         'bids' : o.SIDE_BID,
                     }[side]
                     for e in d[side]:
+                        # Note, some times volume is zero.  No idea what that mean.
                         o.update(oside, Decimal(e[0]), Decimal(e[1]))
                 o.setupdated(int(d['timestamp']))
                 self.service.updateOrderbook(self._channelmap[m['channel']], o)
