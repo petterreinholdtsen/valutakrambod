@@ -32,7 +32,7 @@ class CursesViewer(object):
         # Remove expired notes
         now = time.time()
         self.notes = list(filter(lambda x: x[1] > now, self.notes))
-    def logerror(self, msg):
+    def logerror(self, service, msg):
         now = time.time()
         self.errlog.append((now, msg))
     def data(self, service, pair, askprice, bidprice, stored, created, lastchange):
@@ -104,7 +104,7 @@ class CursesViewer(object):
             self.addnote("Updating %s" % service.servicename(), 10)
             await service.fetchRates(service.wantedpairs)
         except Exception as e:
-            self.logerror("%s fetch: %s" % (service.servicename(), str(e)))
+            self.logerror(service, "%s fetch: %s" % (service.servicename(), str(e)))
             # FIXME flag service as having problems?
     def considerNewPeriod(self, service, pair):
         """Change update period for those doing periodic updates, if it far
@@ -118,7 +118,7 @@ from the current period and not too short.
             if period > 20 and \
                abs(service.periodic.callback_time/1000 - (period/2)) > 5:
               if False:
-                self.logerror("Change %s period from %.1f (%1.f) to %.1f" % (
+                self.logerror(service, "Change %s period from %.1f (%1.f) to %.1f" % (
                     service.servicename(),
                     service.periodic.callback_time/1000,
                     abs(service.periodic.callback_time/1000 - (period/2)),
