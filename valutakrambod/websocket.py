@@ -71,28 +71,33 @@ class WebSocketClient(object):
         self._ws_connection.close()
         self._ws_connection = None
 
-    def _connect_callback(self, future):
+    async def _connect_callback(self, future):
         if future.exception() is None:
             self._ws_connection = future.result()
             self._on_connection_success()
-            self._read_messages()
+            await self._read_messages()
         else:
             self._on_connection_error(future.exception())
 
-    @gen.coroutine
-    def _read_messages(self):
-        while True:
-            msg = yield self._ws_connection.read_message()
-            if msg is None:
-                self._on_connection_close()
-                break
 
-            try:
-                self._on_message(msg)
-            except Exception as exception:
-                self.service.logerror("failed handling message for %s: %s" % (
-                    self.service.servicename(), str(exception)
-                ))
+    async def _read_message(self):
+        msg = await self._ws_connection.read_message()
+        if msg is None:
+            self.service.logerror("received empty websocket message from %s, reconnecting" %
+                                  self.service.servicename())
+            self.close()
+            self.connect()
+            return
+        try:
+            self._on_message(msg)
+        except Exception as exception:
+            self.service.logerror("failed handling message for %s: %s" % (
+                self.service.servicename(), str(exception)
+            ))
+
+    async def _read_messages(self):
+        while self._ws_connection:
+            await self._read_message()
 
     def _on_message(self, msg):
         """This is called when new message is available from the server.
