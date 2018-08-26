@@ -13,6 +13,9 @@ from valutakrambod.services import Service
 class BitcoinsNorway(Service):
     """
 Query the Bitcoin Norway API.
+
+https://bitcoinsnorway.com/apiref/
+
 """
     keymap = {
         'BTC' : 'XBT',
@@ -61,7 +64,7 @@ Query the Bitcoin Norway API.
         return res
 
     def websocket(self):
-        """BitcoinsNorway do not provide websocket API 2018-08-26."""
+        """BitcoinsNorway websocket API not implemented 2018-08-26."""
         return None
 
 class TestBitcoinsNorway(unittest.TestCase):
