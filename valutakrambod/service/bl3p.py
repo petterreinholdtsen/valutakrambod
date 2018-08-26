@@ -145,13 +145,50 @@ N/A
             for asset in assets['wallets'].keys():
                 res[asset] = Decimal(assets['wallets'][asset]['balance']['value'])
             return res
-        async def orders(self, market= None):
+        async def placeorder(self, marketpair, side, price, volume, immediate=False):
+            #raise NotImplementedError()
+            type = {
+                    Orderbook.SIDE_ASK : 'ask',
+                    Orderbook.SIDE_BID : 'bid',
+            }[side]
+            data = {
+                'type': type,
+#                'amount_funds_int': ,# Limit order to this amount of EUR
+#                'fee_currency': ,
+            }
+            if price is not None:
+                # Price in EUR (*1e5)
+                data['price_int'] = int(price * 100000)
+            else:
+                raise ValueError("placeorder() without price currently not supported")
+            # Ask for this amount of BTC / 1Eu (ie Satochi)
+            data['amount_int'] = int(volume * 100000000)
+
+            method = '%s/money/order/add' % marketpair
+            if True:
+                print("Want to query %s with %s" % (method, data))
+                order_id = -1
+            else:
+                order = await self.service._query_private(method, data)
+                order_id = order['order_id']
+            return order_id
+        async def cancelorder(self, marketpair, orderref):
+            data = {
+                'order_id': orderref,
+            }
+            order = await self.service._query_private('%s/money/order/cancel'
+                                                       % marketpair, data)
+            # Nothing to return.  _query_private() will throw if not successfull
+            return
+        def cancelallorders(self, marketpair):
+            raise NotImplementedError()
+        async def orders(self, marketpair = None):
             """Return the currently open orders in standardized format.
 
 FIXME The format is yet to be standardized.
 
 """
-            res = await self.service._query_private('%s/money/orders' % market, {})
+            res = await self.service._query_private('%s/money/orders' % marketpair, {})
             print(res)
         def estimatefee(self, side, price, volume):
             """From https://bl3p.eu/fees:
@@ -224,22 +261,26 @@ Run simple self test.
         b = await t.balance()
         print(b)
         print(await t.orders('BTCEUR'))
-        self.ioloop.stop()
-        return # FIXME The rest is not implemented
         print("trying to place order")
-        if 'EUR' in b and b['EUR'] > 0.1:
+        balance = 0
+        bidamount = Decimal('0.1')
+        bidprice = Decimal('0.1')
+        if 'EUR' in b:
+            balance = b['EUR']
+        if balance > bidamount:
             print("placing order")
             pairstr = self.s._makepair('BTC', 'EUR')
             txs = await t.placeorder(pairstr, Orderbook.SIDE_BID,
-                                   0.1, 0.1, immediate=False)
+                                     bidprice, bidamount, immediate=False)
             print("placed orders: %s" % txs)
             for tx in txs:
                 print("cancelling order %s" % tx)
-                j = await t.cancelorder(tx)
+                j = await t.cancelorder(pairstr, tx)
                 print("done cancelling: %s" % str(j))
                 self.assertTrue('count' in j and j['count'] == 1)
         else:
-            print("unable to place 1 EUR order, lacking funds")
+            print("unable to place %s EUR order, balance only had %s"
+                  % (bidamount, balance))
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)
