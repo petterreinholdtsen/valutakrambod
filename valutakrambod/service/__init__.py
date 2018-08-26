@@ -2,6 +2,7 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
+from .bitcoinsnorway import BitcoinsNorway
 from .bitmynt import Bitmynt
 from .bitpay import Bitpay
 from .bitstamp import Bitstamp
@@ -22,6 +23,7 @@ __SERVICES_LIMITED__ = [
 
 # Services working without any configuration
 __SERVICES__ = [
+    BitcoinsNorway,
     Bitmynt,
     Bitpay,
     Bitstamp,
