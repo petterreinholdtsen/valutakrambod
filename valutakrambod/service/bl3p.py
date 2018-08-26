@@ -4,7 +4,6 @@
 
 import base64
 import configparser
-import decimal
 import hashlib
 import hmac
 import simplejson
@@ -13,6 +12,7 @@ import tornado.ioloop
 import unittest
 import urllib
 
+from decimal import Decimal
 from os.path import expanduser
 
 from valutakrambod.services import Orderbook
@@ -78,8 +78,8 @@ https://bl3p.eu/api .
             if 200 != r.code:
                 raise Error()
             #print(j)
-            ask = decimal.Decimal(j['ask'])
-            bid = decimal.Decimal(j['bid'])
+            ask = Decimal(j['ask'])
+            bid = Decimal(j['bid'])
             self.updateRates(p, ask, bid, int(j['timestamp']))
             res[p] = self.rates[p]
         return res
@@ -102,8 +102,8 @@ https://bl3p.eu/api .
                     'bids' : o.SIDE_BID,
                 }[side]
                 for e in m[side]:
-                    o.update(oside, decimal.Decimal(e['price_int']) / 100000,
-                             decimal.Decimal(e['price_int']) / 100000 )
+                    o.update(oside, Decimal(e['price_int']) / 100000,
+                             Decimal(e['price_int']) / 100000 )
             # FIXME setting our own timestamp, as there is no
             # timestamp from the source.  Asked bl3p to set one in
             # email sent 2018-06-27.
@@ -143,7 +143,7 @@ N/A
             print(assets)
             res = {}
             for asset in assets['wallets'].keys():
-                res[asset] = decimal.Decimal(assets['wallets'][asset]['balance']['value'])
+                res[asset] = Decimal(assets['wallets'][asset]['balance']['value'])
             return res
         async def orders(self, market= None):
             """Return the currently open orders in standardized format.
@@ -162,7 +162,7 @@ Using our set price to calculate amount for fixed fee, as our price
 have to be closed to the used price if our order is executed.
 
             """
-            return price * volume * decimal.Decimal(0.0025) + decimal.Decimal(0.01)
+            return price * volume * Decimal(0.0025) + Decimal(0.01)
     def trading(self):
         if self.activetrader is None:
             self.activetrader = self.Bl3pTrading(self)

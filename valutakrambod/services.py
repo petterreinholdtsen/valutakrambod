@@ -3,12 +3,12 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import collections
-import decimal
 import simplejson
 import statistics
 import time
 from operator import neg
 
+from decimal import Decimal
 from sortedcontainers.sorteddict import SortedDict
 from tornado import httpclient
 import tornado.ioloop
@@ -69,7 +69,7 @@ class Trading(object):
 volume for price.
 
         """
-        return decimal.Decimal(0.0)
+        return Decimal(0.0)
 
 class Service(object):
     def __init__(self, currencies=None):
