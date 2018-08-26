@@ -208,13 +208,13 @@ This is example output from the API call:
             txids = res['txid']
             txdesc = res['descr']
             return txids
-        async def cancelorder(self, orderref):
+        async def cancelorder(self, marketpair, orderref):
             args = {'txid' : orderref}
             res = await self.service._query_private('CancelOrder', args)
             return res
-        def cancelallorders(self):
+        def cancelallorders(self, marketpair):
             raise NotImplementedError()
-        async def orders(self, market= None):
+        async def orders(self, marketpair = None):
             """Return the currently open orders in standardized format.
 
 FIXME The format is yet to be standardized.
@@ -287,19 +287,25 @@ Run simple self test.
         print(b)
         print(await t.orders())
         print("trying to place order")
-        if 'EUR' in b and b['EUR'] > 0.1:
+        balance = 0
+        bidamount = Decimal('0.1')
+        bidprice = Decimal('0.1')
+        if 'EUR' in b:
+            balance = b['EUR']
+        if balance > bidamount:
             print("placing order")
             pairstr = self.s._makepair('BTC', 'EUR')
             txs = await t.placeorder(pairstr, Orderbook.SIDE_BID,
-                                   0.1, 0.1, immediate=False)
+                                   bidprice, bidamount, immediate=False)
             print("placed orders: %s" % txs)
             for tx in txs:
                 print("cancelling order %s" % tx)
-                j = await t.cancelorder(tx)
+                j = await t.cancelorder(pairstr, tx)
                 print("done cancelling: %s" % str(j))
                 self.assertTrue('count' in j and j['count'] == 1)
         else:
-            print("unable to place 1 EUR order, lacking funds")
+            print("unable to place %s EUR order, balance only had %s"
+                  % (bidamount, balance))
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)

@@ -58,11 +58,11 @@ class Trading(object):
         raise NotImplementedError()
     def placeorder(self, marketpair, side, price, volume, immediate=False):
         raise NotImplementedError()
-    def cancelorder(self, orderref):
+    def cancelorder(self, marketpair, orderref):
         raise NotImplementedError()
-    def cancelallorders(self):
+    def cancelallorders(self, marketpair):
         raise NotImplementedError()
-    def orders(self, market= None):
+    def orders(self, marketpair= None):
         raise NotImplementedError()
     def estimatefee(self, side, price, volume):
         """Return amount of fee for a transaction selling virtual currency
