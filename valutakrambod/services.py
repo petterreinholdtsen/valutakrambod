@@ -82,6 +82,7 @@ class Service(object):
         self.wantedpairs = None
         self.periodic = None
         self.activetrader = None
+        self.lastupdaterequest = 0
         if currencies:
             for p in self.ratepairs():
                 #print(p, currencies)
@@ -145,7 +146,11 @@ services to store configuration.
                                                  str(e)))
             raise
     def requestUpdate(self):
-        tornado.ioloop.IOLoop.current().add_callback(self._callFetchRates)
+        # Do not ask for updates more than once every two seconds, to give the
+        # update some time to finish and avoid rate limiting on the service side
+        if self.lastupdaterequest + 2 < time.time():
+            tornado.ioloop.IOLoop.current().add_callback(self._callFetchRates)
+            self.lastupdaterequest = time.time()
     def periodicUpdate(self, mindelay = 30): # 30 seconds
         """Start periodic calls to fetchRates(), with the minimum delay in
 seconds specified in as an argument.  The default update frequency is
