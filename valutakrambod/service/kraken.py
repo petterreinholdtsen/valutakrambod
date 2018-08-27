@@ -283,20 +283,29 @@ Run simple self test.
             self.ioloop.stop()
             return
         t = self.s.trading()
-        b = await t.balance()
-        print(b)
-        print(await t.orders())
-        print("trying to place order")
+
+        pair = ('BTC', 'EUR')
+        pairstr = self.s._makepair(pair[0], pair[1])
+        o = await t.orders()
+        print(o)
+
+        rates = await self.s.currentRates()
+        ask = rates[pair]['ask']
+        bid = rates[pair]['bid']
+        askprice = ask * Decimal(1.5) # place test order 50% above current ask price
+        bidprice = bid * Decimal(0.5) # place test order 50% below current bid price
+        #print("Ask %s -> %s" % (ask, askprice))
+        #print("Bid %s -> %s" % (bid, bidprice))
+
         balance = 0
         bidamount = Decimal('0.1')
-        bidprice = Decimal('0.1')
-        if 'EUR' in b:
-            balance = b['EUR']
+        b = await t.balance()
+        if pair[1] in b:
+            balance = b[pair[1]]
         if balance > bidamount:
-            print("placing order")
-            pairstr = self.s._makepair('BTC', 'EUR')
+            print("placing buy order %s %s at %s %s" % (bidamount, pair[0], bidprice, pair[1]))
             txs = await t.placeorder(pairstr, Orderbook.SIDE_BID,
-                                   bidprice, bidamount, immediate=False)
+                                     bidprice, bidamount, immediate=False)
             print("placed orders: %s" % txs)
             for tx in txs:
                 print("cancelling order %s" % tx)
@@ -306,6 +315,26 @@ Run simple self test.
         else:
             print("unable to place %s EUR order, balance only had %s"
                   % (bidamount, balance))
+
+        balance = 0
+        askamount = Decimal('0.1')
+        b = await t.balance()
+        if pair[0] in b:
+            balance = b[pair[0]]
+        if balance > askamount:
+            print("placing sell order %s %s at %s %s" % (askamount, pair[0], askprice, pair[1]))
+            txs = await t.placeorder(pairstr, Orderbook.SIDE_ASK,
+                                     askprice, askamount, immediate=False)
+            print("placed orders: %s" % txs)
+            for tx in txs:
+                print("cancelling order %s" % tx)
+                j = await t.cancelorder(pairstr, tx)
+                print("done cancelling: %s" % str(j))
+                self.assertTrue('count' in j and j['count'] == 1)
+        else:
+            print("unable to place %s EUR order, balance only had %s"
+                  % (askamount, balance))
+
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)
