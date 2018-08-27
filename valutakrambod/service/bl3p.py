@@ -33,7 +33,7 @@ https://bl3p.eu/api .
         # API-Sign = Message signature using HMAC-SHA512 of (URI path +
         # null terminator + POST data) and base64 decoded secret API key
         message = "%s%c%s" % (path, 0x00, datastr)
-        print(message)
+        #print(message)
         privkey_bin = base64.b64decode(self.confget('apisecret'))
         msgsignature = hmac.new(privkey_bin, message.encode(), hashlib.sha512).digest()
         sign = base64.b64encode(msgsignature)
@@ -48,7 +48,7 @@ https://bl3p.eu/api .
         url = "%s%s" % (self.baseurl, method)
         body, response = await self._signedpost(url, args)
         j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
-        print(j)
+        #print(j)
         if 'success' != j['result']:
             raise Exception('unable to query %s: %s' % (method, j['data']['message']))
         return j['data']
@@ -140,7 +140,7 @@ N/A
 
 """
             assets = await self.service._query_private('GENMKT/money/info', {})
-            print(assets)
+            #print(assets)
             res = {}
             for asset in assets['wallets'].keys():
                 res[asset] = Decimal(assets['wallets'][asset]['balance']['value'])
@@ -165,12 +165,8 @@ N/A
             data['amount_int'] = int(volume * 100000000)
 
             method = '%s/money/order/add' % marketpair
-            if False:
-                print("Want to query %s with %s" % (method, data))
-                order_id = -1
-            else:
-                order = await self.service._query_private(method, data)
-                order_id = order['order_id']
+            order = await self.service._query_private(method, data)
+            order_id = order['order_id']
             return order_id
         async def cancelorder(self, marketpair, orderref):
             data = {
@@ -258,27 +254,54 @@ Run simple self test.
             self.ioloop.stop()
             return
         t = self.s.trading()
-        b = await t.balance()
-        print(b)
-        print(await t.orders('BTCEUR'))
-        print("trying to place order")
+
+        pair = ('BTC', 'EUR')
+        pairstr = "%s%s" % pair
+        o = await t.orders(pairstr)
+        print(o)
+
+        rates = await self.s.currentRates()
+        ask = rates[pair]['ask']
+        bid = rates[pair]['bid']
+        askprice = ask * Decimal(1.5) # place test order 50% above current ask price
+        bidprice = bid * Decimal(0.5) # place test order 50% below current bid price
+        #print("Ask %s -> %s" % (ask, askprice))
+        #print("Bid %s -> %s" % (bid, bidprice))
+
         balance = 0
         bidamount = Decimal('0.4')
-        bidprice = Decimal('0.5')
-        if 'EUR' in b:
-            balance = b['EUR']
+        b = await t.balance()
+        if pair[1] in b:
+            balance = b[pair[1]]
         if balance > bidamount:
-            print("placing order")
-            pairstr = 'BTCEUR'
+            print("placing buy order %s %s at %s %s" % (bidamount, pair[0], bidprice, pair[1]))
             tx = await t.placeorder(pairstr, Orderbook.SIDE_BID,
-                                     bidprice, bidamount, immediate=False)
-            print("placed orders: %s" % tx)
+                                    bidprice, bidamount, immediate=False)
+            print("placed order with id %s" % tx)
             print("cancelling order %s" % tx)
-            j = await t.cancelorder(pairstr, tx)
-            print("done cancelling: %s" % str(j))
+            await t.cancelorder(pairstr, tx)
+            print("done cancelling: %s")
         else:
             print("unable to place %s EUR order, balance only had %s"
                   % (bidamount, balance))
+
+        balance = 0
+        askamount = Decimal('0.4')
+        b = await t.balance()
+        if pair[0] in b:
+            balance = b[pair[0]]
+        if balance > askamount:
+            print("placing sell order %s %s at %s %s" % (askamount, pair[1], askprice, pair[0]))
+            tx = await t.placeorder(pairstr, Orderbook.SIDE_ASK,
+                                    askprice, askamount, immediate=False)
+            print("placed order with id %s" % tx)
+            print("cancelling order %s" % tx)
+            await t.cancelorder(pairstr, tx)
+            print("done cancelling: %s")
+        else:
+            print("unable to place %s EUR order, balance only had %s"
+                  % (askamount, balance))
+
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)
