@@ -50,7 +50,7 @@ https://bl3p.eu/api .
         j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
         print(j)
         if 'success' != j['result']:
-            raise Exception('unable to query %s: %s' % (method, j['error']))
+            raise Exception('unable to query %s: %s' % (method, j['data']['message']))
         return j['data']
 
     def servicename(self):
@@ -154,7 +154,7 @@ N/A
             data = {
                 'type': type,
 #                'amount_funds_int': ,# Limit order to this amount of EUR
-#                'fee_currency': ,
+                'fee_currency': 'EUR',
             }
             if price is not None:
                 # Price in EUR (*1e5)
@@ -165,7 +165,7 @@ N/A
             data['amount_int'] = int(volume * 100000000)
 
             method = '%s/money/order/add' % marketpair
-            if True:
+            if False:
                 print("Want to query %s with %s" % (method, data))
                 order_id = -1
             else:
@@ -263,21 +263,19 @@ Run simple self test.
         print(await t.orders('BTCEUR'))
         print("trying to place order")
         balance = 0
-        bidamount = Decimal('0.1')
-        bidprice = Decimal('0.1')
+        bidamount = Decimal('0.4')
+        bidprice = Decimal('0.5')
         if 'EUR' in b:
             balance = b['EUR']
         if balance > bidamount:
             print("placing order")
-            pairstr = self.s._makepair('BTC', 'EUR')
-            txs = await t.placeorder(pairstr, Orderbook.SIDE_BID,
+            pairstr = 'BTCEUR'
+            tx = await t.placeorder(pairstr, Orderbook.SIDE_BID,
                                      bidprice, bidamount, immediate=False)
-            print("placed orders: %s" % txs)
-            for tx in txs:
-                print("cancelling order %s" % tx)
-                j = await t.cancelorder(pairstr, tx)
-                print("done cancelling: %s" % str(j))
-                self.assertTrue('count' in j and j['count'] == 1)
+            print("placed orders: %s" % tx)
+            print("cancelling order %s" % tx)
+            j = await t.cancelorder(pairstr, tx)
+            print("done cancelling: %s" % str(j))
         else:
             print("unable to place %s EUR order, balance only had %s"
                   % (bidamount, balance))
