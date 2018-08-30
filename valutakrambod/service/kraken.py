@@ -231,6 +231,8 @@ FIXME The format is yet to be standardized.
             """
             return price * volume * Decimal(0.0026)
     def trading(self):
+        if self.confget('apikey', fallback=None) is None:
+            return None
         if self.activetrader is None:
             self.activetrader = self.KrakenTrading(self)
         return self.activetrader

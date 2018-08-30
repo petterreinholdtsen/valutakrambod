@@ -197,6 +197,8 @@ have to be closed to the used price if our order is executed.
             """
             return price * volume * Decimal(0.0025) + Decimal(0.01)
     def trading(self):
+        if self.confget('apikey', fallback=None) is None:
+            return None
         if self.activetrader is None:
             self.activetrader = self.Bl3pTrading(self)
         return self.activetrader
