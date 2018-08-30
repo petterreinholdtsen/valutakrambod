@@ -21,7 +21,7 @@ class CursesViewer(object):
         self.errlog = []
         self.currencies = currencies
         self.streamcollectors = {}
-        configpath = expanduser('~/.config/btc-rates/config.ini')
+        configpath = expanduser('~/.config/valutakrambod/config.ini')
         self.config = configparser.ConfigParser()
         self.config.read(configpath)
         self.notes = []
