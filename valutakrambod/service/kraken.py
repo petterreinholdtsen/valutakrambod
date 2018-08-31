@@ -212,7 +212,7 @@ This is example output from the API call:
             args = {'txid' : orderref}
             res = await self.service._query_private('CancelOrder', args)
             return res
-        def cancelallorders(self, marketpair):
+        async def cancelallorders(self, marketpair):
             raise NotImplementedError()
         async def orders(self, marketpair = None):
             """Return the currently open orders in standardized format.

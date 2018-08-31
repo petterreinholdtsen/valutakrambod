@@ -54,15 +54,15 @@ class Orderbook(object):
 class Trading(object):
     def __init__(self, service):
         self.service = service
-    def balance(self):
+    async def balance(self):
         raise NotImplementedError()
-    def placeorder(self, marketpair, side, price, volume, immediate=False):
+    async def placeorder(self, marketpair, side, price, volume, immediate=False):
         raise NotImplementedError()
-    def cancelorder(self, marketpair, orderref):
+    async def cancelorder(self, marketpair, orderref):
         raise NotImplementedError()
-    def cancelallorders(self, marketpair):
+    async def cancelallorders(self, marketpair):
         raise NotImplementedError()
-    def orders(self, marketpair= None):
+    async def orders(self, marketpair= None):
         raise NotImplementedError()
     def estimatefee(self, side, price, volume):
         """Return amount of fee for a transaction selling virtual currency
