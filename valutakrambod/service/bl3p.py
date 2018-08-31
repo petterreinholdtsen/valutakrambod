@@ -293,8 +293,8 @@ Run simple self test.
             await t.cancelorder(pairstr, tx)
             print("done cancelling: %s")
         else:
-            print("unable to place %s EUR order, balance only had %s"
-                  % (bidamount, balance))
+            print("unable to place %s %s order, balance only had %s"
+                  % (bidamount, pair[1], balance))
 
         balance = 0
         askamount = Decimal('0.4')
@@ -310,8 +310,8 @@ Run simple self test.
             await t.cancelorder(pairstr, tx)
             print("done cancelling: %s")
         else:
-            print("unable to place %s EUR order, balance only had %s"
-                  % (askamount, balance))
+            print("unable to place %s %s order, balance only had %s"
+                  % (askamount, pair[0], balance))
 
         self.ioloop.stop()
     def testTradingConnection(self):

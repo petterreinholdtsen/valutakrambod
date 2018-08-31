@@ -326,8 +326,8 @@ Run simple self test.
                 print("done cancelling: %s" % str(j))
                 self.assertTrue('count' in j and j['count'] == 1)
         else:
-            print("unable to place %s EUR order, balance only had %s"
-                  % (bidamount, balance))
+            print("unable to place %s %s order, balance only had %s"
+                  % (bidamount, pair[1], balance))
 
         balance = 0
         askamount = Decimal('0.1')
@@ -345,8 +345,8 @@ Run simple self test.
                 print("done cancelling: %s" % str(j))
                 self.assertTrue('count' in j and j['count'] == 1)
         else:
-            print("unable to place %s EUR order, balance only had %s"
-                  % (askamount, balance))
+            print("unable to place %s %s order, balance only had %s"
+                  % (askamount, pair[0], balance))
 
         self.ioloop.stop()
     def testTradingConnection(self):
