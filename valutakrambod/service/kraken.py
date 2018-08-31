@@ -159,6 +159,7 @@ https://www.kraken.com/help/api#general-usage .
     class KrakenTrading(Trading):
         def __init__(self, service):
             self.service = service
+            self._lastbalance = None
         def setkeys(self, apikey, apisecret):
             """Add the user specific information required by the trading API in
 clear text to the current configuration.  These settings can also be
@@ -178,14 +179,22 @@ This is example output from the API call:
 {'error': [], 'result': {'KFEE': '0.00', 'BCH': '0.1', 'ZEUR': '1.234', 'XXLM': '1.32', 'XXBT': '1.24'}}
 
         """
+            # Return cached balance if available and less then 10
+            # seconds old to avoid triggering rate limit.
+            if self._lastbalance is not None and \
+               self._lastbalance['_timestamp'] + 10 < time.time():
+                return self._lastbalance
             assets = await self.service._query_private('Balance', {})
             res = {}
             for asset in assets.keys():
                 c = self.service._revCurrencyMap(asset)
                 res[c] = Decimal(assets[asset])
+            self._lastbalance = res
+            self._lastbalance['_timestamp'] = time.time()
             return res
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
-#            raise NotImplementedError()
+            # Invalidate balance cache
+            self._lastbalance = None
             if price is None:
                 ordertype = 'market'
             else:
@@ -209,6 +218,8 @@ This is example output from the API call:
             txdesc = res['descr']
             return txids
         async def cancelorder(self, marketpair, orderref):
+            # Invalidate balance cache
+            self._lastbalance = None
             args = {'txid' : orderref}
             res = await self.service._query_private('CancelOrder', args)
             return res

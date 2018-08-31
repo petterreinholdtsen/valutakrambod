@@ -120,6 +120,7 @@ https://bl3p.eu/api .
     class Bl3pTrading(Trading):
         def __init__(self, service):
             self.service = service
+            self._lastbalance = None
         def setkeys(self, apikey, apisecret):
             """Add the user specific information required by the trading API in
 clear text to the current configuration.  These settings can also be
@@ -139,6 +140,11 @@ This is example output from the API call:
 N/A
 
 """
+            # Return cached balance if available and less then 10
+            # seconds old to avoid triggering rate limit.
+            if self._lastbalance is not None and \
+               self._lastbalance['_timestamp'] + 10 < time.time():
+                return self._lastbalance
             assets = await self.service._query_private('GENMKT/money/info', {})
             #print(assets)
             res = {}
@@ -146,7 +152,8 @@ N/A
                 res[asset] = Decimal(assets['wallets'][asset]['balance']['value'])
             return res
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
-            #raise NotImplementedError()
+            # Invalidate balance cache
+            self._lastbalance = None
             type = {
                     Orderbook.SIDE_ASK : 'ask',
                     Orderbook.SIDE_BID : 'bid',
@@ -169,6 +176,8 @@ N/A
             order_id = order['order_id']
             return order_id
         async def cancelorder(self, marketpair, orderref):
+            # Invalidate balance cache
+            self._lastbalance = None
             data = {
                 'order_id': orderref,
             }
