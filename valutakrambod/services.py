@@ -177,8 +177,9 @@ seconds specified in as an argument.  The default update frequency is
             if old['ask'] == ask and old['bid'] == bid and old['when'] == when:
                 changed = False
             if when is not None and old['when'] is not None and old['when'] > when:
-                raise Exception('received old update (%.1f < %.1f - %.1fs behind)' %
-                                (when, old['when'], old['when'] - when ))
+                self.logerror('ignoring old update (%.1f < %.1f - %.1fs behind)' %
+                              (when, old['when'], old['when'] - when ))
+                return
 
         if changed:
             if when:
