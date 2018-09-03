@@ -42,11 +42,11 @@ class SocketIOClient(valutakrambod.websocket.WebSocketClient):
         # schedule next ping
         loop = ioloop.IOLoop.current()
         self._ping_ref = loop.call_later(self.pinginterval, self._ping)
-    def _connect_callback(self, future):
+    async def _connect_callback(self, future):
         if future.exception() is None:
             self._ws_connection = future.result()
             self._on_connection_success()
-            self._read_messages()
+            await self._read_messages()
         else:
             self._on_connection_error(future.exception())
     
