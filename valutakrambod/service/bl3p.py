@@ -103,7 +103,7 @@ https://bl3p.eu/api .
                 }[side]
                 for e in m[side]:
                     o.update(oside, Decimal(e['price_int']) / 100000,
-                             Decimal(e['price_int']) / 100000 )
+                             Decimal(e['amount_int']) / 100000000 )
             # FIXME setting our own timestamp, as there is no
             # timestamp from the source.  Asked bl3p to set one in
             # email sent 2018-06-27.
