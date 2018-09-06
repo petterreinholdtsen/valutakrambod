@@ -63,8 +63,13 @@ class CursesViewer(object):
             else:
                 spread = float('nan')
             period = service.guessperiod(pair)
-            s = "%15s %s%s %11.4f %11.4f %5.1f%% %4d %6.f %6.f" % (
+            if service == updatedservice:
+                updated = "+"
+            else:
+                updated = " "
+            s = "%15s%s%s%s %11.4f %11.4f %5.1f%% %4d %6.f %6.f" % (
                 entry[1],
+                updated,
                 pair[0],
                 pair[1],
                 bidprice,
