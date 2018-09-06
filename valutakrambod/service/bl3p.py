@@ -301,7 +301,7 @@ Run simple self test.
                   % (bidamount, pair[1], balance))
 
         balance = 0
-        askamount = Decimal('0.01')
+        askamount = Decimal('0.001')
         b = await t.balance()
         if pair[0] in b:
             balance = b[pair[0]]
