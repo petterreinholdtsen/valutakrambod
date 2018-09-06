@@ -156,6 +156,7 @@ N/A
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
             # Invalidate balance cache
             self._lastbalance = None
+            pairstr = "%s%s" % marketpair
             type = {
                     Orderbook.SIDE_ASK : 'ask',
                     Orderbook.SIDE_BID : 'bid',
@@ -173,18 +174,19 @@ N/A
             # Ask for this amount of BTC / 1Eu (ie Satochi)
             data['amount_int'] = int(volume * 100000000)
 
-            method = '%s/money/order/add' % marketpair
+            method = '%s/money/order/add' % pairstr
             order = await self.service._query_private(method, data)
             order_id = order['order_id']
             return order_id
         async def cancelorder(self, marketpair, orderref):
             # Invalidate balance cache
             self._lastbalance = None
+            pairstr = "%s%s" % marketpair
             data = {
                 'order_id': orderref,
             }
             order = await self.service._query_private('%s/money/order/cancel'
-                                                       % marketpair, data)
+                                                       % pairstr, data)
             # Nothing to return.  _query_private() will throw if not successfull
             return
         async def cancelallorders(self, marketpair):
@@ -195,7 +197,8 @@ N/A
 FIXME The format is yet to be standardized.
 
 """
-            res = await self.service._query_private('%s/money/orders' % marketpair, {})
+            pairstr = "%s%s" % marketpair
+            res = await self.service._query_private('%s/money/orders' % pairstr, {})
             print(res)
         def estimatefee(self, side, price, volume):
             """From https://bl3p.eu/fees:
@@ -269,8 +272,7 @@ Run simple self test.
         t = self.s.trading()
 
         pair = ('BTC', 'EUR')
-        pairstr = "%s%s" % pair
-        o = await t.orders(pairstr)
+        o = await t.orders(pair)
         print(o)
 
         rates = await self.s.currentRates()
@@ -288,11 +290,11 @@ Run simple self test.
             balance = b[pair[1]]
         if balance > bidamount:
             print("placing buy order %s %s at %s %s" % (bidamount, pair[0], bidprice, pair[1]))
-            tx = await t.placeorder(pairstr, Orderbook.SIDE_BID,
+            tx = await t.placeorder(pair, Orderbook.SIDE_BID,
                                     bidprice, bidamount, immediate=False)
             print("placed order with id %s" % tx)
             print("cancelling order %s" % tx)
-            await t.cancelorder(pairstr, tx)
+            await t.cancelorder(pair, tx)
             print("done cancelling: %s")
         else:
             print("unable to place %s %s order, balance only had %s"
@@ -305,11 +307,11 @@ Run simple self test.
             balance = b[pair[0]]
         if balance > askamount:
             print("placing sell order %s %s at %s %s" % (askamount, pair[1], askprice, pair[0]))
-            tx = await t.placeorder(pairstr, Orderbook.SIDE_ASK,
+            tx = await t.placeorder(pair, Orderbook.SIDE_ASK,
                                     askprice, askamount, immediate=False)
             print("placed order with id %s" % tx)
             print("cancelling order %s" % tx)
-            await t.cancelorder(pairstr, tx)
+            await t.cancelorder(pair, tx)
             print("done cancelling: %s" % tx)
         else:
             print("unable to place %s %s order, balance only had %s"

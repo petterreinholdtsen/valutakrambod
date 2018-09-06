@@ -195,6 +195,7 @@ This is example output from the API call:
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
             # Invalidate balance cache
             self._lastbalance = None
+            pairstr = self.service._makepair(marketpair[0], marketpair[1])
             if price is None:
                 ordertype = 'market'
             else:
@@ -204,11 +205,11 @@ This is example output from the API call:
                     Orderbook.SIDE_BID : 'buy',
             }[side]
             args = {
-                'pair' : marketpair,
+                'pair' : pairstr,
                 'type' : type,
                 'ordertype' : ordertype,
-                'price' : str(price),
-                'volume' : str(volume),
+                'price' : price,
+                'volume' : volume,
 #                'oflags' : ,
 #                'starttm' : ,
             }
@@ -317,7 +318,7 @@ Run simple self test.
             balance = b[pair[1]]
         if balance > bidamount:
             print("placing buy order %s %s at %s %s" % (bidamount, pair[0], bidprice, pair[1]))
-            txs = await t.placeorder(pairstr, Orderbook.SIDE_BID,
+            txs = await t.placeorder(pair, Orderbook.SIDE_BID,
                                      bidprice, bidamount, immediate=False)
             print("placed orders: %s" % txs)
             for tx in txs:
@@ -336,7 +337,7 @@ Run simple self test.
             balance = b[pair[0]]
         if balance > askamount:
             print("placing sell order %s %s at %s %s" % (askamount, pair[0], askprice, pair[1]))
-            txs = await t.placeorder(pairstr, Orderbook.SIDE_ASK,
+            txs = await t.placeorder(pair, Orderbook.SIDE_ASK,
                                      askprice, askamount, immediate=False)
             print("placed orders: %s" % txs)
             for tx in txs:
