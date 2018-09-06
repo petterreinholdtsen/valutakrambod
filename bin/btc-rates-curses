@@ -15,7 +15,7 @@ import tornado.ioloop
 import valutakrambod
 
 class CursesViewer(object):
-    def __init__(self, currencies = None):
+    def __init__(self, currencies = None, opt = None, args = None):
         self.rates = SortedDict()
         self.lastrequest = {}
         self.errlog = []
@@ -25,6 +25,8 @@ class CursesViewer(object):
         self.config = configparser.ConfigParser()
         self.config.read(configpath)
         self.notes = []
+        self.opt = opt
+        self.args = args
     def addnote(self, msg, lifetime=10):
         now = time.time()
         self.notes.append((msg, now+lifetime))
@@ -37,10 +39,10 @@ class CursesViewer(object):
         self.errlog.append((now, msg))
     def data(self, service, pair, askprice, bidprice, stored, created, lastchange):
         self.rates[pair, (service.servicename())] = (service, askprice, bidprice, stored, created, lastchange)
-        self.drawdata()
+        self.drawdata(service)
         self.considerNewPeriod(service, pair)
 
-    def drawdata(self):
+    def drawdata(self, updatedservice):
         self.stdscr.clear()
         maxy, maxx = self.stdscr.getmaxyx()
         line = 2
@@ -56,7 +58,7 @@ class CursesViewer(object):
                 age = now - created
             else:
                 age = Decimal('nan')
-            if askprice is not None and askprice != 0.0:
+            if askprice is not None and askprice != Decimal(0.0):
                 spread = (1-bidprice/askprice)*100
             else:
                 spread = float('nan')
@@ -149,7 +151,8 @@ from the current period and not too short.
                 service.periodicUpdate(60)
 
         # Make sure to update at least ever 5 seconds if nothing happen elsewhere.
-        self.regular =  tornado.ioloop.PeriodicCallback(self.drawdata, 5 * 1000)
+        self.regular =  tornado.ioloop.PeriodicCallback(functools.partial(self.drawdata, None),
+                                                        5 * 1000)
         self.regular.start()
         try:
             self.ioloop.start()
@@ -180,7 +183,7 @@ def main():
     # The set of currencies we care about, only pairs in this set is
     # relevant.
     currencies = ['BTC', 'USD', 'EUR', 'NOK']
-    c = CursesViewer(currencies)
+    c = CursesViewer(currencies, opt=opt, args=args)
     if opt.curses:
         wrapper(c.run)
     else:
