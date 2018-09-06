@@ -311,7 +311,7 @@ Run simple self test.
         #print("Bid %s -> %s" % (bid, bidprice))
 
         balance = 0
-        bidamount = Decimal('0.1')
+        bidamount = Decimal('0.01')
         b = await t.balance()
         if pair[1] in b:
             balance = b[pair[1]]
@@ -330,7 +330,7 @@ Run simple self test.
                   % (bidamount, pair[1], balance))
 
         balance = 0
-        askamount = Decimal('0.1')
+        askamount = Decimal('0.01')
         b = await t.balance()
         if pair[0] in b:
             balance = b[pair[0]]
