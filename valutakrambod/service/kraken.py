@@ -182,7 +182,7 @@ This is example output from the API call:
             # Return cached balance if available and less then 10
             # seconds old to avoid triggering rate limit.
             if self._lastbalance is not None and \
-               self._lastbalance['_timestamp'] + 10 < time.time():
+               self._lastbalance['_timestamp'] + 10 > time.time():
                 return self._lastbalance
             assets = await self.service._query_private('Balance', {})
             res = {}
@@ -351,6 +351,16 @@ Run simple self test.
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)
+
+    async def checkBalanceCaching(self):
+        t = self.s.trading()
+        b1 = await t.balance()
+        b2 = await t.balance()
+        self.assertTrue(b1['_timestamp'] == b2['_timestamp'])
+        self.ioloop.stop()
+    def testBalanceCaching(self):
+        self.runCheck(self.checkBalanceCaching)
+
 if __name__ == '__main__':
     t = TestKraken()
     unittest.main()

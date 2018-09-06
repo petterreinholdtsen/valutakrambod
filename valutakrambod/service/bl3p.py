@@ -143,13 +143,15 @@ N/A
             # Return cached balance if available and less then 10
             # seconds old to avoid triggering rate limit.
             if self._lastbalance is not None and \
-               self._lastbalance['_timestamp'] + 10 < time.time():
+               self._lastbalance['_timestamp'] + 10 > time.time():
                 return self._lastbalance
             assets = await self.service._query_private('GENMKT/money/info', {})
             #print(assets)
             res = {}
             for asset in assets['wallets'].keys():
                 res[asset] = Decimal(assets['wallets'][asset]['balance']['value'])
+            self._lastbalance = res
+            self._lastbalance['_timestamp'] = time.time()
             return res
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
             # Invalidate balance cache
@@ -316,6 +318,16 @@ Run simple self test.
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)
+
+    async def checkBalanceCaching(self):
+        t = self.s.trading()
+        b1 = await t.balance()
+        b2 = await t.balance()
+        self.assertTrue(b1['_timestamp'] == b2['_timestamp'])
+        self.ioloop.stop()
+    def testBalanceCaching(self):
+        self.runCheck(self.checkBalanceCaching)
+
 if __name__ == '__main__':
     t = TestBl3p()
     unittest.main()
