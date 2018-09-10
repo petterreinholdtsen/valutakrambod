@@ -60,7 +60,7 @@ class Trading(object):
         raise NotImplementedError()
     async def cancelorder(self, marketpair, orderref):
         raise NotImplementedError()
-    async def cancelallorders(self, marketpair):
+    async def cancelallorders(self, marketpair=None):
         raise NotImplementedError()
     async def orders(self, marketpair= None):
         raise NotImplementedError()

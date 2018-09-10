@@ -189,7 +189,7 @@ N/A
                                                        % pairstr, data)
             # Nothing to return.  _query_private() will throw if not successfull
             return
-        async def cancelallorders(self, marketpair):
+        async def cancelallorders(self, marketpair=None):
             raise NotImplementedError()
         async def orders(self, marketpair = None):
             """Return the currently open orders in standardized format.
