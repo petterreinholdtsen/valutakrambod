@@ -153,6 +153,7 @@ the websocket API.
     class BitstampTrading(Trading):
         def __init__(self, service):
             self.service = service
+            self._lastbalance = None
         def setkeys(self, apikey, apisecret):
             """Add the user specific information required by the trading API in
 clear text to the current configuration.  These settings can also be
@@ -162,18 +163,30 @@ loaded from the stored configuration.
             self.service.confset('apikey', apikey)
             self.service.confset('apisecret', apisecret)
         async def balance(self):
+            # Return cached balance if available and less then 10
+            # seconds old to avoid triggering rate limit.
+            print('balance %s %s' % (self._lastbalance, time.time()))
+            if self._lastbalance is not None and \
+               self._lastbalance['_timestamp'] + 10 > time.time():
+                return self._lastbalance
+
             assets = await self.service._query_private('v2/balance/', {})
             #print(assets)
-            ret = {}
+            res = {}
             for entry in sorted(assets.keys()):
                 instrument, type = entry.split('_')
                 value = Decimal(assets[entry])
                 #print(instrument, type, value)
                 # FIXME should we use balance, reserved or available?
                 if 'balance' == type and 0 != value:
-                    ret[instrument.upper()] = value
-            return ret
+                    res[instrument.upper()] = value
+            self._lastbalance = res
+            self._lastbalance['_timestamp'] = time.time()
+            return res
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
+            # Invalidate balance cache
+            self._lastbalance = None
+
             pairstr = ("%s%s" % (marketpair[0], marketpair[1])).lower()
             if price is None:
                 ordertype = 'market/'
