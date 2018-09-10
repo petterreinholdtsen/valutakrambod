@@ -3,6 +3,7 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 from .bitcoinsnorway import BitcoinsNorway
+from .bitfinex import Bitfinex
 from .bitmynt import Bitmynt
 from .bitpay import Bitpay
 from .bitstamp import Bitstamp
@@ -24,6 +25,7 @@ __SERVICES_LIMITED__ = [
 # Services working without any configuration
 __SERVICES__ = [
     BitcoinsNorway,
+    Bitfinex,
     Bitmynt,
     Bitpay,
     Bitstamp,
