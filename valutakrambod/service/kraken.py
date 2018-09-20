@@ -355,6 +355,9 @@ Run simple self test.
 
     async def checkBalanceCaching(self):
         t = self.s.trading()
+        if not t:
+            self.ioloop.stop()
+            return
         b1 = await t.balance()
         b2 = await t.balance()
         self.assertTrue(b1['_timestamp'] == b2['_timestamp'])
