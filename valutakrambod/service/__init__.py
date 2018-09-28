@@ -10,6 +10,7 @@ from .bitstamp import Bitstamp
 from .bl3p import Bl3p
 from .coinbase import Coinbase
 from .exchangerates import Exchangerates
+from .gemini import Gemini
 from .hitbtc import Hitbtc
 from .kraken import Kraken
 from .miraiex import MiraiEx
@@ -32,6 +33,7 @@ __SERVICES__ = [
     Bl3p,
     Coinbase,
     Exchangerates,
+    Gemini,
     Hitbtc,
     Kraken,
     MiraiEx,
