@@ -187,7 +187,8 @@ N/A
             }
             order = await self.service._query_private('%s/money/order/cancel'
                                                        % pairstr, data)
-            # Nothing to return.  _query_private() will throw if not successfull
+            # Nothing needs to be returned.  _query_private() will
+            # throw if not successfull
             return
         async def cancelallorders(self, marketpair=None):
             raise NotImplementedError()
