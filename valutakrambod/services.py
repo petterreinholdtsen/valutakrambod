@@ -63,6 +63,42 @@ class Trading(object):
     async def cancelallorders(self, marketpair=None):
         raise NotImplementedError()
     async def orders(self, marketpair= None):
+        """Return our currently open bid and aks orders, per trade pair,
+sorted on price.  Bids are sorted with the lowest price first, while
+asks are sorted with the highest price first.
+
+Example output:
+
+
+ {
+  ('BTC', 'EUR'): {
+    "bid": [
+        {
+        "price": 123,
+        "volume": 0.1,
+        "id": "orderref",
+        },
+        {
+        "price": 122,
+        "volume": 0.1,
+        "id": "orderref",
+        }
+    ],
+    "ask": [
+        {
+        "price": 123,
+        "volume": 0.1,
+        "id": "orderref",
+        },
+        {
+        "price": 124,
+        "volume": 0.1,
+        "id": "orderref",
+        }
+    ],
+  }
+ }
+        """
         raise NotImplementedError()
     def estimatefee(self, side, price, volume):
         """Return amount of fee for a transaction selling virtual currency

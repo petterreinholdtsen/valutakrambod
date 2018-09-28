@@ -193,14 +193,79 @@ N/A
         async def cancelallorders(self, marketpair=None):
             raise NotImplementedError()
         async def orders(self, marketpair = None):
-            """Return the currently open orders in standardized format.
+            """Return the currently open orders in standardized format."""
 
-FIXME The format is yet to be standardized.
-
-"""
             pairstr = "%s%s" % marketpair
-            res = await self.service._query_private('%s/money/orders' % pairstr, {})
-            print(res)
+            orders = await self.service._query_private('%s/money/orders' % pairstr, {})
+            print(orders)
+            """ Example output from the service
+{
+  "orders": [
+    {
+      "amount": {
+        "currency": "BTC",
+        "display": "0.01000000 BTC",
+        "value": "0.01000000",
+        "value_int": "1000000",
+        "display_short": "0.01 BTC"
+      },
+      "currency": "EUR",
+      "amount_funds": {
+        "currency": "EUR",
+        "display": "28.88800 EUR",
+        "value": "28.88800",
+        "value_int": "2888800",
+        "display_short": "28.89 EUR"
+      },
+      "order_id": 42014331,
+      "item": "BTC",
+      "status": "placed",
+      "type": "bid",
+      "date": 1538118082,
+      "amount_executed": {
+        "currency": "BTC",
+        "display": "0.00000000 BTC",
+        "value": "0.00000000",
+        "value_int": "0",
+        "display_short": "0.00 BTC"
+      },
+      "amount_funds_executed": {
+        "currency": "EUR",
+        "display": "0.00000 EUR",
+        "value": "0.00000",
+        "value_int": "0",
+        "display_short": "0.00 EUR"
+      },
+      "label": "testing",
+      "price": {
+        "currency": "EUR",
+        "display": "2888.80000 EUR",
+        "value": "2888.80000",
+        "value_int": "288880000",
+        "display_short": "2888.80 EUR"
+      }
+    }
+  ]
+}
+"""
+            res = {}
+            for order in orders['orders']:
+                id = order['order_id']
+                pair = (order['item'], order['currency'])
+                volume = Decimal(order['amount']['value'])
+                price = Decimal(order['price']['value'])
+                if order['type'] not in res:
+                    res[order['type']] = []
+                res[order['type']].append({
+                    "price": price,
+                    "volume": volume,
+                    "id": id,
+                })
+            if 'ask' in res:
+                res['ask'] = sorted(res['ask'], key=lambda k: k['price'], reverse=True)
+            if 'bid' in res:
+                res['bid'] = sorted(res['bid'], key=lambda k: k['price'])
+            return res
         def estimatefee(self, side, price, volume):
             """From https://bl3p.eu/fees:
   Rade fee
