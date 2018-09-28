@@ -161,7 +161,7 @@ services to store configuration.
     def confset(self, key, value):
         return self._config.set(self.servicename(), key, value)
 
-    async def _fetch(self, method, url, timeout = 30, headers = None):
+    async def _get(self, url, timeout = 30, headers = None):
         req = httpclient.HTTPRequest(url,
                           method,
                           request_timeout=timeout,
@@ -170,8 +170,6 @@ services to store configuration.
         response = await self.http_client.fetch(req)
         #print("updated %s" % self.servicename())
         return response.body, response
-    async def _get(self, url, timeout = 30, headers = None):
-        return await self._fetch('GET', url, timeout = timeout, headers = headers)
     async def _jsonget(self, url, timeout = 30, headers = None):
         body, response = await self._get(url, timeout=timeout, headers=headers)
         j = simplejson.loads(body.decode('UTF-8'), use_decimal=True)
