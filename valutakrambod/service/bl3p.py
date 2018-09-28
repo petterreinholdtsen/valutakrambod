@@ -254,17 +254,20 @@ N/A
                 pair = (order['item'], order['currency'])
                 volume = Decimal(order['amount']['value'])
                 price = Decimal(order['price']['value'])
-                if order['type'] not in res:
-                    res[order['type']] = []
-                res[order['type']].append({
+                if pair not in res:
+                    res[pair] = {}
+                if order['type'] not in res[pair]:
+                    res[pair][order['type']] = []
+                res[pair][order['type']].append({
                     "price": price,
                     "volume": volume,
                     "id": id,
                 })
-            if 'ask' in res:
-                res['ask'] = sorted(res['ask'], key=lambda k: k['price'], reverse=True)
-            if 'bid' in res:
-                res['bid'] = sorted(res['bid'], key=lambda k: k['price'])
+            for pair in res.keys():
+                if 'ask' in res[pair]:
+                    res[pair]['ask'] = sorted(res[pair]['ask'], key=lambda k: k['price'], reverse=True)
+                if 'bid' in res[pair]:
+                    res[pair]['bid'] = sorted(res[pair]['bid'], key=lambda k: k['price'])
             return res
         def estimatefee(self, side, price, volume):
             """From https://bl3p.eu/fees:

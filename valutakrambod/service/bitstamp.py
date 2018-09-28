@@ -252,17 +252,20 @@ loaded from the stored configuration.
                 pair = order['currency_pair'].split('/')
                 volume = Decimal(order['amount'])
                 price = Decimal(order['price'])
+                if pair not in res:
+                    res[pair] = {}
                 if type not in res:
-                    res[type] = []
-                res[type].append({
+                    res[pair][type] = []
+                res[pair][type].append({
                     "price": price,
                     "volume": volume,
                     "id": id,
                 })
-            if 'ask' in res:
-                res['ask'] = sorted(res['ask'], key=lambda k: k['price'], reverse=True)
-            if 'bid' in res:
-                res['bid'] = sorted(res['bid'], key=lambda k: k['price'])
+            for pair in res.keys():
+                if 'ask' in res[pair]:
+                    res[pair]['ask'] = sorted(res[pair]['ask'], key=lambda k: k['price'], reverse=True)
+                if 'bid' in res[pair]:
+                    res[pair]['bid'] = sorted(res[pair]['bid'], key=lambda k: k['price'])
             #print(res)
             return res
         def estimatefee(self, side, price, volume):
