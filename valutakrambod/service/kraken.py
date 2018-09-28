@@ -227,16 +227,75 @@ This is example output from the API call:
         async def cancelallorders(self, marketpair=None):
             raise NotImplementedError()
         async def orders(self, marketpair = None):
-            """Return the currently open orders in standardized format.
+            """Return the currently open orders in standardized format."""
 
-FIXME The format is yet to be standardized.
-"""
             args = {
                 'trades' : True,
 #                'userref' : ,
             }
-            res = await self.service._query_private('OpenOrders', args)
-            print(res)
+            orders = await self.service._query_private('OpenOrders', args)
+            """ Example output from the service
+{
+  'open': {
+    'OTQATO-TUBHG-J2WJNK': {'userref': 0,
+      'vol_exec': '0.00000000',
+      'limitprice': '0.00000',
+      'opentm': Decimal('1538127677.0559'),
+      'expiretm': 0,
+      'refid': None,
+      'status': 'open',
+      'stopprice': '0.00000',
+      'price': '0.00000',
+      'oflags': 'fciq',
+      'fee': '0.00000',
+      'descr': {
+        'price': '8575.9',
+        'order': 'sell 0.00200000 XBTEUR @ limit 8575.9',
+        'close': '',
+        'ordertype': 'limit',
+        'type': 'sell',
+        'pair': 'XBTEUR',
+        'leverage': 'none',
+        'price2': '0'
+     },
+     'starttm': 0,
+     'vol': '0.00200000',
+     'cost': '0.00000',
+     'misc': ''
+    }
+  }
+}
+
+"""
+            res = {}
+            for id in orders['open'].keys():
+                order = orders['open'][id]
+
+                type = { 'buy': 'bid', 'sell':'ask'}[order['descr']['type']]
+                pairstr = order['descr']['pair']
+                # Why on earth is kraken not returning the X/Z-style
+                # pair names here?  Injecting and hoping for the best. :/
+                pair = (self.service._revCurrencyMap('X'+pairstr[0:3]),
+                        self.service._revCurrencyMap('Z'+pairstr[3:]))
+                #print(pair)
+                volume = Decimal(order['vol'])
+                price = Decimal(order['descr']['price'])
+                if pair not in res:
+                    res[pair] = {}
+                if type not in res[pair]:
+                    res[pair][type] = []
+                res[pair][type].append({
+                    "price": price,
+                    "volume": volume,
+                    "id": id,
+                })
+            for pair in res.keys():
+                if 'ask' in res[pair]:
+                    res[pair]['ask'] = sorted(res[pair]['ask'], key=lambda k: k['price'], reverse=True)
+                if 'bid' in res[pair]:
+                    res[pair]['bid'] = sorted(res[pair]['bid'], key=lambda k: k['price'])
+            #print(res)
+            return res
         def estimatefee(self, side, price, volume):
             """From https://www.kraken.com/help/fees, the max fee is 0.26%.
 
