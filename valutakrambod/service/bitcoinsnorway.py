@@ -52,7 +52,7 @@ https://bitcoinsnorway.com/apiref/
             body = {
                 "productPair": pairstr,
             }
-            c, r = await self._post(url, simplejson.dumps(body))
+            c, r = await self._post(url, body=simplejson.dumps(body))
             j = simplejson.loads(c.decode('UTF-8'), use_decimal=True)
             #print(j)
             self.updateRates(pair,

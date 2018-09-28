@@ -42,8 +42,8 @@ daily.  See also https://www.norges-bank.no/RSS/.
                 ('USD', 'NOK') : usdurl,
             }[pair]
             #print(url)
-            r = await self._get(url)
-            rss =  etree.fromstring(r.body)
+            body, r = await self._get(url)
+            rss =  etree.fromstring(body)
             item = rss.xpath('/rss/channel/item')[0]
             title = item.xpath("./title/text()")[0]
             # Note, pubdate from this source can not be trusted.  It

@@ -42,7 +42,7 @@ https://bl3p.eu/api .
             'Rest-Sign': sign.decode(),
         }
 
-        body, response = await self._post(url, datastr, headers)
+        body, response = await self._post(url, body=datastr, headers=headers)
         return body, response
     async def _query_private(self, method, args):
         url = "%s%s" % (self.baseurl, method)

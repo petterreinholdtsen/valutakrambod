@@ -68,7 +68,7 @@ the websocket API.
         data['signature'] =  sign
         datastr = urllib.parse.urlencode(data)
         #print(datastr)
-        body, response = await self._post(url, datastr)
+        body, response = await self._post(url, body=datastr)
         return body, response
     async def _query_private(self, method, args):
         url = "%s%s" % (self.baseurl, method)

@@ -17,7 +17,7 @@ https://github.com/Paymium/api-documentation/ and
 https://github.com/Paymium/api-documentation/blob/master/WEBSOCKETS.md.
 
     """
-    baseurl = "https://paymium.com/api/v1/data/"
+    baseurl = "https://paymium.com/api/v1/"
     def servicename(self):
         return "Paymium"
 
@@ -36,7 +36,7 @@ https://github.com/Paymium/api-documentation/blob/master/WEBSOCKETS.md.
         for pair in pairs:
             f = pair[0]
             t = pair[1]
-            url = "%s%s/depth" % (self.baseurl, t.lower())
+            url = "%sdata/%s/depth" % (self.baseurl, t.lower())
             #print(url)
             j, r = await self._jsonget(url)
             #print(j)
@@ -66,7 +66,7 @@ https://github.com/Paymium/api-documentation/blob/master/WEBSOCKETS.md.
             t = p[1]
             pair="X%sZ%s" % (f, t)
             #print(pair)
-            url = "%s%s/ticker" % (self.baseurl, t.lower())
+            url = "%sdata/%s/ticker" % (self.baseurl, t.lower())
             (j, r) = await self._jsonget(url)
             #print(r.code)
             if 200 != r.code:

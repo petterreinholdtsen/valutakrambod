@@ -81,7 +81,7 @@ https://www.kraken.com/help/api#general-usage .
             'API-Key' : self.confget('apikey'),
             'API-Sign': sign,
             }
-        body, response = await self._post(url, datastr, headers)
+        body, response = await self._post(url, body=datastr, headers=headers)
         return body, response
     async def _query_private(self, method, args):
         url = "%s%s" % (self.privatebaseurl, method)
