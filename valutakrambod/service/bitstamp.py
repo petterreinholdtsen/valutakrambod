@@ -228,10 +228,42 @@ loaded from the stored configuration.
             # throw if not successfull
             return res
         async def orders(self, marketpair = None):
+            """Return the currently open orders in standardized format."""
+
             pairstr = 'all/'
             if marketpair:
                 pairstr = ("%s%s" % (marketpair[0], marketpair[1])).lower()
-            res = await self.service._query_private('v2/open_orders/%s/' % pairstr, {})
+            orders = await self.service._query_private('v2/open_orders/%s/' % pairstr, {})
+            #print(orders)
+            """ Example output from the service
+[
+ {'type': '0',
+  'id': '2207850769',
+  'currency_pair': 'BTC/EUR',
+  'datetime': '2018-09-28 09:19:56',
+  'amount': '0.00200000',
+  'price': '2859.99'}
+]
+"""
+            res = {}
+            for order in orders:
+                id = order['id']
+                type = { '0': 'bid', '1':'ask'}[order['type']]
+                pair = order['currency_pair'].split('/')
+                volume = Decimal(order['amount'])
+                price = Decimal(order['price'])
+                if type not in res:
+                    res[type] = []
+                res[type].append({
+                    "price": price,
+                    "volume": volume,
+                    "id": id,
+                })
+            if 'ask' in res:
+                res['ask'] = sorted(res['ask'], key=lambda k: k['price'], reverse=True)
+            if 'bid' in res:
+                res['bid'] = sorted(res['bid'], key=lambda k: k['price'])
+            #print(res)
             return res
         def estimatefee(self, side, price, volume):
             """From https://www.bitstamp.net/fee_schedule/:
