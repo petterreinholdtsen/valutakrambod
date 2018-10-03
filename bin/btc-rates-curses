@@ -34,9 +34,15 @@ class CursesViewer(object):
         # Remove expired notes
         now = time.time()
         self.notes = list(filter(lambda x: x[1] > now, self.notes))
-    def logerror(self, service, msg):
+    def logerror(self, service, msg, lifetime=30):
         now = time.time()
-        self.errlog.append((now, msg))
+        self.errlog.append((msg, now+lifetime, now))
+        with open('error.log', 'a') as f:
+            f.write("%s %s\n" % (datetime.datetime.utcfromtimestamp(now).isoformat(),
+                                 msg))
+    def expireerrors(self):
+        now = time.time()
+        self.errlog = list(filter(lambda x: x[1] > now, self.errlog))
     def data(self, service, pair, askprice, bidprice, stored, created, lastchange):
         self.rates[pair, (service.servicename())] = (service, askprice, bidprice, stored, created, lastchange)
         self.drawdata(service)
@@ -90,10 +96,11 @@ class CursesViewer(object):
         self.expirenotes()
 
         line = line + 1
-        for when, error in self.errlog[-1::-1]:
+        for errmsg, expire, when in self.errlog[-1::-1]:
             if line < maxy - 1:
-                self.stdscr.addstr(line, 2, "%.1f %s" % (now - when, error[0:maxx-1]))
+                self.stdscr.addstr(line, 2, "%.1f %s" % (now - when, errmsg[0:maxx-1]))
                 line = line + 1
+        self.expireerrors()
         self.stdscr.refresh()
 
     def newdata(self, service, pair, changed):
