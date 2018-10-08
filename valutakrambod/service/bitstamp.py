@@ -215,7 +215,7 @@ loaded from the stored configuration.
             if 'error' in res and 'error' == res['status']:
                 raise Exception('placing %s order failed' % type)
             if id not in res:
-                raise Exception('Unexpected response while placing %s order: %s' % str(res))
+                raise Exception('Unexpected response while placing %s order: %s' % (type, str(res)))
             return int(res['id'])
         async def cancelorder(self, marketpair, orderref):
             data = {
