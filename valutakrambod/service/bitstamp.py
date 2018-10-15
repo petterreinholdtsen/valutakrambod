@@ -214,7 +214,7 @@ loaded from the stored configuration.
             #print(res)
             if 'error' in res and 'error' == res['status']:
                 raise Exception('placing %s order failed' % type)
-            if id not in res:
+            if 'id' not in res:
                 raise Exception('Unexpected response while placing %s order: %s' % (type, str(res)))
             return int(res['id'])
         async def cancelorder(self, marketpair, orderref):
@@ -251,7 +251,7 @@ loaded from the stored configuration.
             for order in orders:
                 id = order['id']
                 type = { '0': 'bid', '1':'ask'}[order['type']]
-                pair = order['currency_pair'].split('/')
+                pair = tuple(order['currency_pair'].split('/'))
                 volume = Decimal(order['amount'])
                 price = Decimal(order['price'])
                 if pair not in res:
