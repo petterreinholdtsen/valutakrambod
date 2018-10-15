@@ -13,7 +13,7 @@ import urllib
 import urllib.parse
 import tornado.ioloop
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from os.path import expanduser
 
 from valutakrambod.services import Orderbook
@@ -168,6 +168,17 @@ loaded from the stored configuration.
             """
             self.service.confset('apikey', apikey)
             self.service.confset('apisecret', apisecret)
+        def roundtovalidprice(self, pair, side, price):
+            """Round the given price to the nearest accepted value.  Kraken limit
+            the number of digits for a given marked price and reject
+            orders with more digits in the proposed price.
+
+            """
+            digits = {
+                (('BTC','EUR'),Orderbook.SIDE_ASK): Decimal('.1'),
+                (('BTC','EUR'),Orderbook.SIDE_BID): Decimal('.1'), # FIXME value is guessed
+            }[(pair,side)]
+            return price.quantize(digits, rounding=ROUND_DOWN)
         async def balance(self):
             """Fetch balance and restructure it to standardized return format,
 using standard currency codes.  The return format is a hash with
@@ -365,8 +376,13 @@ Run simple self test.
         rates = await self.s.currentRates()
         ask = rates[pair]['ask']
         bid = rates[pair]['bid']
-        askprice = ask * Decimal(1.5) # place test order 50% above current ask price
-        bidprice = bid * Decimal(0.5) # place test order 50% below current bid price
+
+        # place test order 50% above current ask price
+        askprice = t.roundtovalidprice(pair, Orderbook.SIDE_ASK, ask * Decimal(1.5))
+
+        # place test order 50% below current bid price
+        bidprice = t.roundtovalidprice(pair, Orderbook.SIDE_BID, bid * Decimal(0.5))
+
         #print("Ask %s -> %s" % (ask, askprice))
         #print("Bid %s -> %s" % (bid, bidprice))
 
@@ -424,6 +440,23 @@ Run simple self test.
     def testBalanceCaching(self):
         self.runCheck(self.checkBalanceCaching)
 
-if __name__ == '__main__':
+    def testRoundingPrices(self):
+        t = self.s.trading()
+        pair = ('BTC', 'EUR')
+        self.assertEqual(Decimal('0.1'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_ASK, Decimal('0.1')))
+        self.assertEqual(Decimal('0.1'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_ASK, Decimal('0.11')))
+        self.assertEqual(Decimal('0.1'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_ASK, Decimal('0.17')))
+
+        self.assertEqual(Decimal('0.1'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_BID, Decimal('0.1')))
+        self.assertEqual(Decimal('0.1'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_BID, Decimal('0.11')))
+        self.assertEqual(Decimal('0.1'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_BID, Decimal('0.17')))
+
+if '__main__' == __name__:
     t = TestKraken()
     unittest.main()

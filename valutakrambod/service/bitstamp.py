@@ -162,6 +162,19 @@ loaded from the stored configuration.
             """
             self.service.confset('apikey', apikey)
             self.service.confset('apisecret', apisecret)
+        def roundtovalidprice(self, pair, side, price):
+            """Round the given price to the nearest accepted value.  Bitstamp limit
+            the number of digits for a given marked price and reject
+            orders with more digits in the proposed price.
+
+            """
+            # These can be looked up using
+            # https://www.bitstamp.net/api/v2/trading-pairs-info/
+            digits = {
+                (('BTC','EUR'),Orderbook.SIDE_ASK): Decimal('.01'),
+                (('BTC','EUR'),Orderbook.SIDE_BID): Decimal('.01'),
+            }[(pair,side)]
+            return price.quantize(digits, rounding=ROUND_DOWN)
         async def balance(self):
             # Return cached balance if available and less then 10
             # seconds old to avoid triggering rate limit.
@@ -357,10 +370,13 @@ Run simple self test.
         rates = await self.s.currentRates()
         ask = rates[pair]['ask']
         bid = rates[pair]['bid']
-        askprice = ask * Decimal(1.5) # place test order 50% above current ask price
-        askprice = askprice.quantize(Decimal('.01'), rounding=ROUND_DOWN)
-        bidprice = bid * Decimal(0.5) # place test order 50% below current bid price
-        bidprice = bidprice.quantize(Decimal('.01'), rounding=ROUND_DOWN)
+
+        # place test order 50% above current ask price
+        askprice = t.roundtovalidprice(pair, Orderbook.SIDE_ASK, ask * Decimal(1.5))
+
+        # place test order 50% below current bid price
+        bidprice = t.roundtovalidprice(pair, Orderbook.SIDE_BID, bid * Decimal(0.5))
+
         #print("Ask %s -> %s" % (ask, askprice))
         #print("Bid %s -> %s" % (bid, bidprice))
 
@@ -403,6 +419,27 @@ Run simple self test.
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)
+
+    def testRoundingPrices(self):
+        t = self.s.trading()
+        pair = ('BTC', 'EUR')
+        self.assertEqual(Decimal('0.1'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_ASK, Decimal('0.1')))
+        self.assertEqual(Decimal('0.11'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_ASK, Decimal('0.11')))
+        self.assertEqual(Decimal('0.11'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_ASK, Decimal('0.111')))
+        self.assertEqual(Decimal('0.11'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_ASK, Decimal('0.117')))
+
+        self.assertEqual(Decimal('0.1'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_BID, Decimal('0.1')))
+        self.assertEqual(Decimal('0.11'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_BID, Decimal('0.11')))
+        self.assertEqual(Decimal('0.11'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_BID, Decimal('0.111')))
+        self.assertEqual(Decimal('0.11'),
+                    t.roundtovalidprice(pair, Orderbook.SIDE_BID, Decimal('0.117')))
 
 if __name__ == '__main__':
     t = TestBitstamp()

@@ -56,6 +56,13 @@ class Trading(object):
         self.service = service
     async def balance(self):
         raise NotImplementedError()
+    def roundtovalidprice(self, pair, side, price):
+        """Round the given price to the nearest accepted value.  Some services limit
+        the number of digits for a given marked price and reject
+        orders with more digits in the proposed price.
+
+        """
+        return price
     async def placeorder(self, marketpair, side, price, volume, immediate=False):
         raise NotImplementedError()
     async def cancelorder(self, marketpair, orderref):
