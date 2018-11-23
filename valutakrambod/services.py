@@ -63,6 +63,13 @@ class Trading(object):
 
         """
         return price
+    def minimum_order(self, marketpair):
+        minimum_volume = Decimal(0.002)
+        if ('BTC', 'EUR') == marketpair:
+            minimum_value = Decimal(5)
+        else:
+            minimum_value = Decimal(0)
+        return (minimum_volume, minimum_value)
     async def placeorder(self, marketpair, side, price, volume, immediate=False):
         raise NotImplementedError()
     async def cancelorder(self, marketpair, orderref):
