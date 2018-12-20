@@ -178,7 +178,7 @@ loaded from the stored configuration.
         async def balance(self):
             # Return cached balance if available and less then 10
             # seconds old to avoid triggering rate limit.
-            print('balance %s %s' % (self._lastbalance, time.time()))
+            #print('balance %s %s' % (self._lastbalance, time.time()))
             if self._lastbalance is not None and \
                self._lastbalance['_timestamp'] + 10 > time.time():
                 return self._lastbalance
