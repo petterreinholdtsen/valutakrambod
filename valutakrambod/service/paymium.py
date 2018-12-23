@@ -14,7 +14,7 @@ import urllib
 
 from tornado.httpclient import HTTPError
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from os.path import expanduser
 
 from valutakrambod.services import Orderbook
@@ -69,8 +69,11 @@ https://github.com/Paymium/api-documentation/blob/master/WEBSOCKETS.md.
     async def _query_private_fetch(self, method, action, args = {}):
         url = "%s%s" % (self.baseurl, action)
         body, response = await self._signedfetch(method, url, args)
-        j = simplejson.loads(response.body.decode('UTF-8'), use_decimal=True)
-        #print(j)
+        if body and '' != body:
+            j = simplejson.loads(response.body.decode('UTF-8'), use_decimal=True)
+            #print(j)
+        else:
+            j = None
         return j
     async def fetchRates(self, pairs = None):
         if pairs is None:
@@ -181,6 +184,17 @@ loaded from the stored configuration.
             """
             self.service.confset('apikey', apikey)
             self.service.confset('apisecret', apisecret)
+        def roundtovalidprice(self, pair, side, price):
+            """Round the given price to the nearest accepted value.  Paymium limit
+            the number of digits for a given marked price and reject
+            orders with more digits in the proposed price.
+
+            """
+            digits = {
+                (('BTC','EUR'),Orderbook.SIDE_ASK): Decimal('.01'),
+                (('BTC','EUR'),Orderbook.SIDE_BID): Decimal('.01'),
+            }[(pair,side)]
+            return price.quantize(digits, rounding=ROUND_DOWN)
         async def balance(self):
             """Fetch balance and restructure it to standardized return format,
 using standard currency codes.  The return format is a hash with
@@ -232,14 +246,20 @@ This is example output from the API call:
 #                'starttm' : ,
             }
             #print(args)
-            res = await self.service._query_private_fetch('POST', 'user/orders', args)
-            print(res)
-            #return res['uuid']
+            try:
+                res = await self.service._query_private_fetch('POST', 'user/orders', args)
+                print(res)
+            except HTTPError as e:
+                print("error:", e.response.body)
+                raise
+            return (res['uuid'],)
         async def cancelorder(self, marketpair, orderref):
             # Invalidate balance cache
             self._lastbalance = None
             res = await self.service._query_private_fetch('DELETE', 'user/orders/%s/cancel' % orderref)
-            return res
+            # Nothing needs to be returned.  _query_private() will
+            # throw if not successfull
+            return
         async def cancelallorders(self, marketpair=None):
             raise NotImplementedError()
         async def orders(self, marketpair = None):
@@ -404,10 +424,10 @@ Run simple self test of the Paymium service class.
         bid = rates[pair]['bid']
 
         # place test order 50% above current ask price
-        askprice = ask * Decimal(1.5)
+        askprice = t.roundtovalidprice(pair, Orderbook.SIDE_ASK, ask * Decimal(1.5))
 
         # place test order 50% below current bid price
-        bidprice = bid * Decimal(0.5)
+        bidprice = t.roundtovalidprice(pair, Orderbook.SIDE_BID, bid * Decimal(0.5))
 
         #print("Ask %s -> %s" % (ask, askprice))
         #print("Bid %s -> %s" % (bid, bidprice))
@@ -426,8 +446,7 @@ Run simple self test of the Paymium service class.
             for tx in txs:
                 print("cancelling order %s" % tx)
                 j = await t.cancelorder(pair, tx)
-                print("done cancelling: %s" % str(j))
-                self.assertTrue('count' in j and j['count'] == 1)
+                print("done cancelling")
         else:
             print("unable to place %s %s order, balance only had %s"
                   % (bidamount, pair[1], balance))
@@ -445,8 +464,7 @@ Run simple self test of the Paymium service class.
             for tx in txs:
                 print("cancelling order %s" % tx)
                 j = await t.cancelorder(pair, tx)
-                print("done cancelling: %s" % str(j))
-                self.assertTrue('count' in j and j['count'] == 1)
+                print("done cancelling")
         else:
             print("unable to place %s %s order, balance only had %s"
                   % (askamount, pair[0], balance))
