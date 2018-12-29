@@ -12,7 +12,7 @@ import tornado.ioloop
 import unittest
 import urllib
 
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from os.path import expanduser
 from tornado import ioloop
 
@@ -295,7 +295,12 @@ Using our set price to calculate amount for fixed fee, as our price
 have to be closed to the used price if our order is executed.
 
             """
-            return price * volume * Decimal(0.0025)
+            fee = price * volume * Decimal(0.0025)
+            digits = {
+                (('BTC','EUR'),Orderbook.SIDE_ASK): Decimal('.01'),
+                (('BTC','EUR'),Orderbook.SIDE_BID): Decimal('.01'),
+            }[(pair, side)]
+            return fee.quantize(digits, rounding=ROUND_UP)
     def trading(self):
         if self.activetrader is None:
             self.activetrader = self.BitstampTrading(self)
