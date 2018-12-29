@@ -77,7 +77,7 @@ class SocketIOClient(valutakrambod.websocket.WebSocketClient):
                 channel, data = msg[2:].split(',', 1)
                 if self.trace:
                     print("channel '%s' data '%s'" % (channel, data))
-                events = simplejson.loads(data)                
+                events = simplejson.loads(data, use_decimal=True)
                 self._on_event(channel, events)
             else:
                 self.service.logerror("received unhandled SocketIO data type %s" % dtype)
