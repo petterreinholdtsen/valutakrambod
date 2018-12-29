@@ -213,7 +213,7 @@ This is example output from the API call:
                self._lastbalance['timestamp'] + 10 > time.time():
                 return self._lastbalance
             info = await self.service._query_private_fetch('GET', 'user', {})
-            print("Balance:", info)
+            #print("Balance:", info)
             res = { 'balance' : {}, 'available': {} }
             for key in info.keys():
                 if 0 == key.find('balance_'):

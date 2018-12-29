@@ -196,7 +196,7 @@ This is example output from the API call:
                self._lastbalance['timestamp'] + 10 > time.time():
                 return self._lastbalance
             assets = await self.service._query_private('Balance', {})
-            print("Balance:", assets)
+            #print("Balance:", assets)
             res = { 'balance' : {}, 'available': {} }
             for asset in assets.keys():
                 c = self.service._revCurrencyMap(asset)

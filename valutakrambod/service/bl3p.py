@@ -146,7 +146,7 @@ N/A
                self._lastbalance['timestamp'] + 10 > time.time():
                 return self._lastbalance
             assets = await self.service._query_private('GENMKT/money/info', {})
-            print(assets)
+            #print(assets)
             res = { 'balance' : {}, 'available': {} }
             for asset in assets['wallets'].keys():
                 res['available'][asset] = Decimal(assets['wallets'][asset]['available']['value'])
