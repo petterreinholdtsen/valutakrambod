@@ -296,11 +296,7 @@ have to be closed to the used price if our order is executed.
 
             """
             fee = price * volume * Decimal(0.0025)
-            digits = {
-                (('BTC','EUR'),Orderbook.SIDE_ASK): Decimal('.01'),
-                (('BTC','EUR'),Orderbook.SIDE_BID): Decimal('.01'),
-            }[(pair, side)]
-            return fee.quantize(digits, rounding=ROUND_UP)
+            return fee.quantize(Decimal('.01'), rounding=ROUND_UP)
     def trading(self):
         if self.activetrader is None:
             self.activetrader = self.BitstampTrading(self)
