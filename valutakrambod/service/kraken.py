@@ -193,15 +193,18 @@ This is example output from the API call:
             # Return cached balance if available and less then 10
             # seconds old to avoid triggering rate limit.
             if self._lastbalance is not None and \
-               self._lastbalance['_timestamp'] + 10 > time.time():
+               self._lastbalance['timestamp'] + 10 > time.time():
                 return self._lastbalance
             assets = await self.service._query_private('Balance', {})
-            res = {}
+            print("Balance:", assets)
+            res = { 'balance' : {}, 'available': {} }
             for asset in assets.keys():
                 c = self.service._revCurrencyMap(asset)
-                res[c] = Decimal(assets[asset])
+                res['balance'][c] = Decimal(assets[asset])
+                # FIXME figure out how to find the amount available
+                res['available'][c] = Decimal(assets[asset])
             self._lastbalance = res
-            self._lastbalance['_timestamp'] = time.time()
+            self._lastbalance['timestamp'] = time.time()
             return res
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
             # Invalidate balance cache
@@ -389,8 +392,8 @@ Run simple self test.
         balance = 0
         bidamount = Decimal('0.01')
         b = await t.balance()
-        if pair[1] in b:
-            balance = b[pair[1]]
+        if pair[1] in b['available']:
+            balance = b['available'][pair[1]]
         if balance > bidamount:
             print("placing buy order %s %s at %s %s" % (bidamount, pair[0], bidprice, pair[1]))
             txs = await t.placeorder(pair, Orderbook.SIDE_BID,
@@ -408,8 +411,8 @@ Run simple self test.
         balance = 0
         askamount = Decimal('0.001')
         b = await t.balance()
-        if pair[0] in b:
-            balance = b[pair[0]]
+        if pair[0] in b['available']:
+            balance = b['available'][pair[0]]
         if balance > askamount:
             print("placing sell order %s %s at %s %s" % (askamount, pair[0], askprice, pair[1]))
             txs = await t.placeorder(pair, Orderbook.SIDE_ASK,
@@ -435,7 +438,7 @@ Run simple self test.
             return
         b1 = await t.balance()
         b2 = await t.balance()
-        self.assertTrue(b1['_timestamp'] == b2['_timestamp'])
+        self.assertTrue(b1['timestamp'] == b2['timestamp'])
         self.ioloop.stop()
     def testBalanceCaching(self):
         self.runCheck(self.checkBalanceCaching)

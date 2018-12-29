@@ -55,6 +55,23 @@ class Trading(object):
     def __init__(self, service):
         self.service = service
     async def balance(self):
+        """Return the total and non-reserved balance for each currency.  The
+'balance' is the amount of currency 'stored' in the trading service,
+while the 'available' is the non-reserved amount that can be used when
+placing an order.  The timestamp is when the balance was last
+updated/fetched from the service.  The balance() function can cache
+the current balance to avoid querying every time an library client ask
+for the balance.
+
+        Return example:
+          {
+            'balance':   { 'BTC': 1,   'EUR': 1 },
+            'available': { 'BTC': 0.5, 'EUR': 0.5 },
+            'timestamp': 1546030831
+          }
+
+        """
+
         raise NotImplementedError()
     def roundtovalidprice(self, pair, side, price):
         """Round the given price to the nearest accepted value.  Some services limit

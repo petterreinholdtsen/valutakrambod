@@ -210,17 +210,19 @@ This is example output from the API call:
             # seconds old to avoid triggering rate limit.
             #print('balance %s %s' % (self._lastbalance, time.time()))
             if self._lastbalance is not None and \
-               self._lastbalance['_timestamp'] + 10 > time.time():
+               self._lastbalance['timestamp'] + 10 > time.time():
                 return self._lastbalance
             info = await self.service._query_private_fetch('GET', 'user', {})
-            #print(info)
-            res = {}
+            print("Balance:", info)
+            res = { 'balance' : {}, 'available': {} }
             for key in info.keys():
                 if 0 == key.find('balance_'):
                     c = key.split('_')[1].upper()
-                    res[c] = info[key]
+                    res['balance'][c] = info[key]
+                    locked = info[key.replace('balance_', 'locked_')]
+                    res['available'][c] = res['balance'][c] - locked
             self._lastbalance = res
-            self._lastbalance['_timestamp'] = time.time()
+            self._lastbalance['timestamp'] = time.time()
             return res
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
             # Invalidate balance cache
@@ -435,9 +437,9 @@ Run simple self test of the Paymium service class.
         balance = 0
         bidamount = Decimal('0.002')
         b = await t.balance()
-        print("Balance:", b)
-        if pair[1] in b:
-            balance = b[pair[1]]
+        #print("Balance:", b)
+        if pair[1] in b['available']:
+            balance = b['available'][pair[1]]
         if balance > bidamount:
             print("placing buy order %s %s at %s %s" % (bidamount, pair[0], bidprice, pair[1]))
             txs = await t.placeorder(pair, Orderbook.SIDE_BID,
@@ -454,8 +456,8 @@ Run simple self test of the Paymium service class.
         balance = 0
         askamount = Decimal('0.002')
         b = await t.balance()
-        if pair[0] in b:
-            balance = b[pair[0]]
+        if pair[0] in b['available']:
+            balance = b['available'][pair[0]]
         if balance > askamount:
             print("placing sell order %s %s at %s %s" % (askamount, pair[0], askprice, pair[1]))
             txs = await t.placeorder(pair, Orderbook.SIDE_ASK,
@@ -480,7 +482,7 @@ Run simple self test of the Paymium service class.
             return
         b1 = await t.balance()
         b2 = await t.balance()
-        self.assertTrue(b1['_timestamp'] == b2['_timestamp'])
+        self.assertTrue(b1['timestamp'] == b2['timestamp'])
         self.ioloop.stop()
     def testBalanceCaching(self):
         self.runCheck(self.checkBalanceCaching)

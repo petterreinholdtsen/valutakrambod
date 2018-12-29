@@ -180,21 +180,21 @@ loaded from the stored configuration.
             # seconds old to avoid triggering rate limit.
             #print('balance %s %s' % (self._lastbalance, time.time()))
             if self._lastbalance is not None and \
-               self._lastbalance['_timestamp'] + 10 > time.time():
+               self._lastbalance['timestamp'] + 10 > time.time():
                 return self._lastbalance
 
             assets = await self.service._query_private('v2/balance/', {})
             #print(assets)
-            res = {}
+            res = { 'balance' : {}, 'available': {} }
             for entry in sorted(assets.keys()):
                 instrument, type = entry.split('_')
                 value = Decimal(assets[entry])
                 #print(instrument, type, value)
-                # FIXME should we use balance, reserved or available?
-                if 'balance' == type and 0 != value:
-                    res[instrument.upper()] = value
+                # 'balance' = 'available' + 'reserved'
+                if 0 != value and type in ('available', 'balance'):
+                    res[type][instrument.upper()] = value
             self._lastbalance = res
-            self._lastbalance['_timestamp'] = time.time()
+            self._lastbalance['timestamp'] = time.time()
             return res
         async def placeorder(self, marketpair, side, price, volume, immediate=False):
             # Invalidate balance cache
@@ -383,8 +383,9 @@ Run simple self test.
         balance = 0
         bidamount = Decimal('0.01')
         b = await t.balance()
-        if pair[1] in b:
-            balance = b[pair[1]]
+        #print('Balance:', b)
+        if pair[1] in b['available']:
+            balance = b['available'][pair[1]]
         if balance > bidamount:
             print("placing buy order %s %s at %s %s" % (bidamount, pair[0], bidprice, pair[1]))
             tx = await t.placeorder(pair, Orderbook.SIDE_BID,
@@ -401,8 +402,8 @@ Run simple self test.
         balance = 0
         askamount = Decimal('0.001')
         b = await t.balance()
-        if pair[0] in b:
-            balance = b[pair[0]]
+        if pair[0] in b['available']:
+            balance = b['available'][pair[0]]
         if balance > askamount:
             print("placing sell order %s %s at %s %s" % (askamount, pair[0], askprice, pair[1]))
             tx = await t.placeorder(pair, Orderbook.SIDE_ASK,
