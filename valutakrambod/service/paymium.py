@@ -328,10 +328,11 @@ This is example output from the API call:
             #print(res)
             return res
         def estimatefee(self, side, price, volume):
-            """From https://www.paymium.com/help/fees, the max fee is 0.26%.
+            """From https://www.paymium.com/page/help/fees,
+            the trading fee is 0.59%.
 
             """
-            fee = price * volume * Decimal(0.0026)
+            fee = price * volume * Decimal(0.0059)
             #print("Paymium fee %s * %s * %s = %s" % (
             #    price, volume, Decimal('0.0026'), fee,
             #))
