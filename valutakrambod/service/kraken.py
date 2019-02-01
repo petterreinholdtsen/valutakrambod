@@ -399,7 +399,10 @@ This is example output from the API call:
                                 for e in m[1][side]:
                                     price = Decimal(e[0])
                                     if '0.00000000' == e[1]:
-                                        o.remove(oside, price)
+                                        try:
+                                            o.remove(oside, price)
+                                        except KeyError as e:
+                                            raise ValueError('asked to remove non-existing %s order %s from Kraken' % (oside, price))
                                     else:
                                         volume = Decimal(e[1])
                                         o.update(oside, price, volume, float(e[2]))
