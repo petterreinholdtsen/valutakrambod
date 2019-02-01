@@ -29,6 +29,7 @@ class WebSocketClient(object):
         self.connect_timeout = connect_timeout
         self.request_timeout = request_timeout
         self.trace = False
+        self._ws_connection = None
 
     def connect(self, url):
         """Connect to the server.
