@@ -146,7 +146,6 @@ from the current period and not too short.
         self.services = []
         for e in valutakrambod.service.knownServices():
             service = e(self.currencies)
-            self.addnote("Enabling %s" % service.servicename(), 5)
             service.confinit(self.config)
             self.services.append(service)
             service.subscribe(self.newdata)
@@ -161,6 +160,10 @@ from the current period and not too short.
                                        functools.partial(self.runRefresh, service))
                 # And do regular updates too
                 service.periodicUpdate(60)
+            if sock:
+                self.addnote("Enabling %s (websocket)" % service.servicename(), 5)
+            else:
+                self.addnote("Enabling %s" % service.servicename(), 5)
 
         # Make sure to update at least ever 5 seconds if nothing happen elsewhere.
         self.regular =  tornado.ioloop.PeriodicCallback(functools.partial(self.drawdata, None),
