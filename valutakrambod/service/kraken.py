@@ -19,11 +19,13 @@ from os.path import expanduser
 from valutakrambod.services import Orderbook
 from valutakrambod.services import Service
 from valutakrambod.services import Trading
+from valutakrambod.websocket import WebSocketClient
 
 class Kraken(Service):
     """
 Query the Kraken API.  Documentation is available from
-https://www.kraken.com/help/api#general-usage .
+https://www.kraken.com/help/api#general-usage and
+https://www.kraken.com/features/websocket-api .
 """
     keymap = {
         'BTC' : 'XXBT',
@@ -151,10 +153,6 @@ https://www.kraken.com/help/api#general-usage .
             self.updateRates(p, ask, bid, None)
             res[p] = self.rates[p]
         return res
-
-    def websocket(self):
-        """Kraken do not provide websocket API 2018-06-27."""
-        return None
 
     class KrakenTrading(Trading):
         def __init__(self, service):
@@ -322,6 +320,135 @@ This is example output from the API call:
             self.activetrader = self.KrakenTrading(self)
         return self.activetrader
 
+    def websocket(self):
+        return self.WSClient(self)
+
+    class WSClient(WebSocketClient):
+        def __init__(self, service):
+            super().__init__(service)
+            self.url = "wss://ws.kraken.com"
+            self.channelinfo = {}
+        def connect(self, url = None):
+            if url is None:
+                url = self.url
+            super().connect(url)
+        def _on_connection_success(self):
+            #print("_on_connection_success()")
+            pairs = []
+            for p in self.service.ratepairs():
+                pairs.append("%s/%s" % (p[0], p[1]))
+            data = {
+                'event': 'subscribe',
+                'subscription': {
+                    'name': 'book',
+                    'depth': 25,
+                },
+                'pair': pairs,
+            }
+            self.send(data)
+            pass
+        def symbols2pair(self, symbol):
+            symbolmap = {
+                'XBT': 'BTC',
+                'XDG': 'DOGE',
+                'XLM': 'STR',
+                }
+            pair = symbol.split('/')
+            if pair[0] in symbolmap:
+                pair[0] = symbolmap[pair[0]]
+            return tuple(pair)
+        def _on_message(self, msg):
+            m = simplejson.loads(msg, use_decimal=True)
+            #print()
+            #print(m)
+            if dict == type(m):
+                # status/heartbeat
+                if 'event' in m:
+                    if 'subscriptionStatus' == m['event']:
+                        channel = m['channelID']
+                        pair = self.symbols2pair(m['pair'])
+                        self.channelinfo[channel] = { 'pair': pair}
+                    elif 'heartbeat' == m['event']:
+                        pass
+                    elif 'systemStatus' == m['event']:
+                        pass
+            elif list == type(m):
+                channel = m[0]
+                pair = self.channelinfo[channel]['pair']
+                updates = list(m[1].keys())
+                #print("channel update:", updates, pair)
+                for update in updates:
+                    if update in ('as', 'bs'):
+                        o = Orderbook()
+                        for side in ('as', 'bs'):
+                            oside = {
+                                'as' : o.SIDE_ASK,
+                                'bs' : o.SIDE_BID,
+                            }[side]
+                            for e in m[1][side]:
+                                o.update(oside, Decimal(e[0]), Decimal(e[1]), float(e[2]))
+                        self.service.updateOrderbook(pair, o)
+                    elif update in ('a', 'b'):
+                        o = self.service.orderbooks[pair].copy()
+                        for side in ('a', 'b'):
+                            oside = {
+                                'a' : o.SIDE_ASK,
+                                'b' : o.SIDE_BID,
+                            }[side]
+                            if side in m[1]:
+                                for e in m[1][side]:
+                                    price = Decimal(e[0])
+                                    if '0.00000000' == e[1]:
+                                        o.remove(oside, price)
+                                    else:
+                                        volume = Decimal(e[1])
+                                        o.update(oside, price, volume, float(e[2]))
+                        self.service.updateOrderbook(pair, o)
+            return
+            if False:
+                if "ticker" == m['method']:
+                    pair = self.symbols2pair(m['params']['symbol'])
+                    self.service.updateRates(pair,
+                                             m['params']['ask'],
+                                             m['params']['bid'],
+                                             self.datestr2epoch(m['params']['timestamp']),
+                    )
+                if "snapshotOrderbook" == m['method']:
+                    pair = self.symbols2pair(m['params']['symbol'])
+                    o = Orderbook()
+                    for side in ('ask', 'bid'):
+                        oside = {
+                            'ask' : o.SIDE_ASK,
+                            'bid' : o.SIDE_BID,
+                        }[side]
+                        #print(m['params'][side])
+                        for e in m['params'][side]:
+                            o.update(oside, Decimal(e['price']), Decimal(e['size']))
+                    # FIXME setting our own timestamp, as there is no
+                    # timestamp from the source.  Ask bl3p to set one?
+                    o.setupdated(time.time())
+                    self.service.updateOrderbook(pair, o)
+                if "updateOrderbook" == m['method']:
+                    pair = self.symbols2pair(m['params']['symbol'])
+                    o = self.service.orderbooks[pair].copy()
+                    for side in ('ask', 'bid'):
+                        oside = {
+                            'ask' : o.SIDE_ASK,
+                            'bid' : o.SIDE_BID,
+                        }[side]
+                        for e in m['params'][side]:
+                            price = Decimal(e['price'])
+                            if '0.00' == e['size']:
+                                o.remove(oside, price)
+                            else:
+                                volume = Decimal(e['size'])
+                                o.update(oside, price, volume)
+                    # FIXME setting our own timestamp, as there is no
+                    # timestamp from the source.  Ask bl3p to set one?
+                    o.setupdated(time.time())
+                    self.service.updateOrderbook(pair, o)
+
+
 class TestKraken(unittest.TestCase):
     """
 Run simple self test.
@@ -430,6 +557,24 @@ Run simple self test.
         self.ioloop.stop()
     def testTradingConnection(self):
         self.runCheck(self.checkTradingConnection)
+
+    def testWebsocket(self):
+        """Test websocket subscription of updates.
+
+        """
+        def printUpdate(service, pair, changed):
+            print(pair,
+                  service.rates[pair]['ask'],
+                  service.rates[pair]['bid'],
+                  time.time() - service.rates[pair]['when'] ,
+                  time.time() - service.rates[pair]['stored'] ,
+            )
+            self.ioloop.stop()
+        self.s.subscribe(printUpdate)
+        c = self.s.websocket()
+        c.connect()
+        self.ioloop.call_later(10, self.ioloop.stop)
+        self.ioloop.start()
 
     async def checkBalanceCaching(self):
         t = self.s.trading()
