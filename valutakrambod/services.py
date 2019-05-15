@@ -282,10 +282,14 @@ seconds specified in as an argument.  The default update frequency is
 
     def updateOrderbook(self, pair, book):
         self.orderbooks[pair] = book
-        self.updateRates(pair,
-                         book.ask.peekitem(0)[0],
-                         book.bid.peekitem(0)[0],
-                         book.lastupdate)
+        if 0 < len(book.ask) and 0 < len(book.bid):
+            self.updateRates(pair,
+                             book.ask.peekitem(0)[0],
+                             book.bid.peekitem(0)[0],
+                             book.lastupdate)
+        else:
+            self.logerror("%s order book empty, not updating rates" % self.servicename())
+
     def guessperiod(self, pair):
         if pair not in self.updates:
             return float('nan')
