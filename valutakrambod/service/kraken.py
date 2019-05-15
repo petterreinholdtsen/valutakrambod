@@ -402,7 +402,7 @@ This is example output from the API call:
                                         try:
                                             o.remove(oside, price)
                                         except KeyError as e:
-                                            raise ValueError('asked to remove non-existing %s order %s from Kraken' % (oside, price))
+                                            raise ValueError('asked to remove non-existing %s order %s' % (oside, price))
                                     else:
                                         volume = Decimal(e[1])
                                         o.update(oside, price, volume, float(e[2]))
