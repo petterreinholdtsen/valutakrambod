@@ -90,7 +90,7 @@ class WebSocketClient(object):
         try:
             self._on_message(msg)
         except Exception as exception:
-            self.service.logerror("failed handling message for %s: %s" % (
+            self.service.logerror("bad msg from %s: %s" % (
                 self.service.servicename(), str(exception)
             ))
 
