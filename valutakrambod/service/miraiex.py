@@ -15,7 +15,7 @@ class MiraiEx(Service):
 https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
 
     """
-    baseurl = "http://miraiex.com/api/v1/"
+    baseurl = "http://api.miraiex.com/v1/"
 
     def servicename(self):
         return "MiraiEx"
@@ -24,7 +24,6 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
         return [
             ('BTC', 'NOK'),
             ('ANC', 'BTC'),
-            ('GST', 'BTC'),
             ('LTC', 'BTC'),
             ]
     async def fetchRates(self, pairs = None):
@@ -82,7 +81,7 @@ class TestMiraiEx(unittest.TestCase):
 
     """
     def setUp(self):
-        self.s = MiraiEx(['BTC', 'ANC', 'NOK', 'GST', 'LTC'])
+        self.s = MiraiEx(['BTC', 'ANC', 'NOK', 'LTC'])
         self.ioloop = tornado.ioloop.IOLoop.current()
     def checkTimeout(self):
         print("check timed out")
