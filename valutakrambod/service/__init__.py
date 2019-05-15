@@ -2,7 +2,6 @@
 # Copyright (c) 2018 Petter Reinholdtsen <pere@hungry.com>
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
-from .bitcoinsnorway import BitcoinsNorway
 from .bitfinex import Bitfinex
 from .bitmynt import Bitmynt
 from .bitpay import Bitpay
@@ -25,7 +24,6 @@ __SERVICES_LIMITED__ = [
 
 # Services working without any configuration
 __SERVICES__ = [
-    BitcoinsNorway,
     Bitfinex,
     Bitmynt,
     Bitpay,
