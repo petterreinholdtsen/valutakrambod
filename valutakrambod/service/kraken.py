@@ -341,7 +341,7 @@ This is example output from the API call:
                 'event': 'subscribe',
                 'subscription': {
                     'name': 'book',
-                    'depth': 1000,
+                    'depth': 1000, # One of 10, 25, 100, 500, 1000
                 },
                 'pair': pairs,
             }
