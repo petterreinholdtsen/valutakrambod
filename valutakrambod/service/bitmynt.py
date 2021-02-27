@@ -68,7 +68,7 @@ Run simple self test.
             bid = res[pair]['bid']
             self.assertTrue(ask >= bid)
             spread = 100*(ask/bid-1)
-            self.assertTrue(spread > 0 and spread < 5)
+            self.assertTrue(spread > 0 and spread < 6)
         self.ioloop.stop()
     def testCurrentRates(self):
         self.runCheck(self.checkCurrentRates)
