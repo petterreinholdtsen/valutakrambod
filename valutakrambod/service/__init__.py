@@ -13,6 +13,7 @@ from .gemini import Gemini
 from .hitbtc import Hitbtc
 from .kraken import Kraken
 from .miraiex import MiraiEx
+from .nbx import Nbx
 from .norgesbank import Norgesbank
 from .oneforge import OneForge
 from .paymium import Paymium
@@ -35,6 +36,7 @@ __SERVICES__ = [
     Hitbtc,
     Kraken,
     MiraiEx,
+    Nbx,
     Norgesbank,
     Paymium,
 ]
