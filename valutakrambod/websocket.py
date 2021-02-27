@@ -53,7 +53,7 @@ class WebSocketClient(object):
         :param str data: message.
         """
         if not self._ws_connection:
-            raise RuntimeError('Web socket connection is closed.')
+            raise RuntimeError('Web socket connection is not open (sending \'%s\').' % data)
         if self.trace:
             print("Writing '%s'" % data)
         if not isinstance(data, str):
