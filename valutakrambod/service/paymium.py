@@ -101,8 +101,8 @@ https://github.com/Paymium/api-documentation/blob/master/WEBSOCKETS.md.
                         raise Exception("unexpected currency returned by depth call")
                     #print("Updating %s", (side, order), now - order['timestamp'])
                     o.update(oside,
-                             order['price'],
-                             order['amount'],
+                             Decimal(order['price']),
+                             Decimal(order['amount']),
                              order['timestamp'])
                 #print(o)
             self.updateOrderbook(pair, o)
@@ -153,8 +153,8 @@ https://github.com/Paymium/api-documentation/blob/master/WEBSOCKETS.md.
                 if 'ticker' == t:
                     pair = ('BTC', data['ticker']['currency'])
                     self.service.updateRates(pair,
-                                             data['ticker']['ask'],
-                                             data['ticker']['bid'],
+                                             Decimal(data['ticker']['ask']),
+                                             Decimal(data['ticker']['bid']),
                                              data['ticker']['at'],
                     )
                 # Hm, how can we know we start with the complete
