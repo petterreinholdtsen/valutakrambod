@@ -388,7 +388,7 @@ Run simple self test.
         #print("Bid %s -> %s" % (bid, bidprice))
 
         balance = 0
-        bidamount = Decimal('0.01')
+        bidamount = Decimal('0.002')
         b = await t.balance()
         #print('Balance:', b)
         if pair[1] in b['available']:
@@ -403,11 +403,11 @@ Run simple self test.
             print("done cancelling: %s" % str(j))
             self.assertTrue('id' in j and j['id'] == tx)
         else:
-            print("unable to place %s %s order, balance only had %s"
-                  % (bidamount, pair[1], balance))
+            print("unable to place %s @ %s %s order, balance only had %s"
+                  % (bidamount, bidprice, pair[1], balance))
 
         balance = 0
-        askamount = Decimal('0.001')
+        askamount = Decimal('0.002')
         b = await t.balance()
         if pair[0] in b['available']:
             balance = b['available'][pair[0]]
