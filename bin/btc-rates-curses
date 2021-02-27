@@ -149,9 +149,18 @@ from the current period and not too short.
         self.stdscr.clear()
         self.ioloop = tornado.ioloop.IOLoop.current()
         self.services = []
-        for e in valutakrambod.service.knownServices():
+        if self.opt.dummy:
+            services = [
+                DummyService,
+                DummyService,
+                DummyService,
+            ]
+        else:
+            services = valutakrambod.service.knownServices()
+        for e in services:
             service = e(self.currencies)
             service.confinit(self.config)
+            self.addnote("Enabling %s" % service.servicename(), 5)
             self.services.append(service)
             service.subscribe(self.newdata)
             service.errsubscribe(self.logerror)
@@ -164,7 +173,10 @@ from the current period and not too short.
                 self.ioloop.call_later(len(self.services),
                                        functools.partial(self.runRefresh, service))
                 # And do regular updates too
-                service.periodicUpdate(60)
+                updateperiod = 60
+                if self.opt.dummy:
+                    updateperiod = 0.1
+                service.periodicUpdate(updateperiod)
             if sock:
                 self.addnote("Enabling %s (websocket)" % service.servicename(), 5)
             else:
@@ -197,7 +209,10 @@ def dummywrapper(f):
 
 def main():
     parser = optparse.OptionParser()
-    parser.add_option('-c', action="store_true", dest='curses', default=False)
+    parser.add_option('-c', help='use curses text interface',
+                      action="store_true", dest='curses', default=False)
+    parser.add_option('-d', help='use dummy services for testing',
+                      action="store_true", dest='dummy', default=False)
     opt, args = parser.parse_args()
     
     # The set of currencies we care about, only pairs in this set is
