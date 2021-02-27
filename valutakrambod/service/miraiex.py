@@ -12,10 +12,10 @@ from valutakrambod.services import Service
 
 class MiraiEx(Service):
     """Query the Mirai Exchange API.  Based on documentation found in
-https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
+https://developers.miraiex.com/ .
 
     """
-    baseurl = "http://api.miraiex.com/v1/"
+    baseurl = "https://api.miraiex.com/v1/"
 
     def servicename(self):
         return "MiraiEx"
@@ -23,8 +23,8 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
     def ratepairs(self):
         return [
             ('BTC', 'NOK'),
-            ('ANC', 'BTC'),
-            ('LTC', 'BTC'),
+#            ('ANC', 'NOK'),
+            ('LTC', 'NOK'),
             ]
     async def fetchRates(self, pairs = None):
         if pairs is None:
@@ -36,9 +36,9 @@ https://gist.github.com/mikalv/7b4f44a34fd48e0b87877c1771903b0a/ .
         for pair in pairs:
             o = Orderbook()
             url = "%smarkets/%s%s/depth" % (self.baseurl, pair[0], pair[1])
-            #print(url)
+            print(url)
             j, r = await self._jsonget(url)
-            #print(j)
+            print(j)
             for side in ('asks', 'bids'):
                 oside = {
                     'asks' : o.SIDE_ASK,
