@@ -187,7 +187,7 @@ loaded from the stored configuration.
             #print(assets)
             res = { 'balance' : {}, 'available': {} }
             for entry in sorted(assets.keys()):
-                instrument, type = entry.split('_')
+                instrument, type = entry.split('_', 1)
                 value = Decimal(assets[entry])
                 #print(instrument, type, value)
                 # 'balance' = 'available' + 'reserved'
