@@ -524,7 +524,7 @@ Run simple self test.
         b = await t.balance()
         if pair[1] in b['available']:
             balance = b['available'][pair[1]]
-        if balance > bidamount:
+        if balance > bidamount * bidprice:
             print("placing buy order %s %s at %s %s" % (bidamount, pair[0], bidprice, pair[1]))
             txs = await t.placeorder(pair, Orderbook.SIDE_BID,
                                      bidprice, bidamount, immediate=False)
