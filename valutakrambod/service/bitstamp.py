@@ -119,25 +119,26 @@ the websocket API.
         ]
         def __init__(self, service):
             super().__init__(service)
-            self.url = "wss://ws.pusherapp.com/app/de504dc5763aeef9ff52?protocol=6&client=js&version=2.1.2&flash=false"
+            self.url = "wss://ws.bitstamp.net"
         def connect(self, url = None):
             if url is None:
                 url = self.url
             super().connect(url)
         def _on_connection_success(self):
             for c in self._channels:
-                self.send({
-                    "event": "pusher:subscribe",
+                msg={
+                    "event": "bts:subscribe",
                     "data": {
                         "channel": c,
                     }
-                })
+                }
+                self.send(msg)
         def _on_message(self, msg):
             m = simplejson.loads(msg, use_decimal=True)
             #print(m)
             if 'data' == m['event']:
                 o = Orderbook()
-                d = simplejson.loads(m['data'], use_decimal=True)
+                d = m['data']
                 for side in ('asks', 'bids'):
                     oside = {
                         'asks' : o.SIDE_ASK,
