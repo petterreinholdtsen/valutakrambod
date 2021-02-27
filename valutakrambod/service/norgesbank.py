@@ -47,9 +47,9 @@ daily.  See also https://www.norges-bank.no/RSS/.
             rss =  etree.fromstring(body)
             item = rss.xpath('/rss/channel/item')[0]
             title = item.xpath("./title/text()")[0]
-            # Note, old pubdate from this source can not be trusted.  It
-            # was seen to move back in time, from 17:00 GMT to 03:00
-            # GMT, and is ignored because of this.
+            # Not sure what Date represent, given that the bank state
+            # that the values are updated 16:00 every day.  Ignoring
+            # the value.
             date = item.xpath("./@Date")[0]
             m = re.match("1 %s = ([0-9.]+) NOK (\d{4}-\d{2}-\d{2}) Norges Banks midtkurs" % pair[0], title)
             if m:
