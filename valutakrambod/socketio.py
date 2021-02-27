@@ -35,10 +35,11 @@ class SocketIOClient(valutakrambod.websocket.WebSocketClient):
         self.pinginterval = 0
     def subscribe(self, channel):
         self.send("40%s" % channel)
-    def _ping(self):
+    def _ping(self, first=False):
         if 0 == self.pinginterval:
             return
-        self.send("2probe")
+        if not first:
+            self.send("2probe")
         # schedule next ping
         loop = ioloop.IOLoop.current()
         self._ping_ref = loop.call_later(self.pinginterval, self._ping)
@@ -55,7 +56,7 @@ class SocketIOClient(valutakrambod.websocket.WebSocketClient):
             if self.trace:
                 print(j)
             self.pinginterval = j['pingInterval'] / 1000
-            self._ping()
+            self._ping(first=True)
             return
         elif "2" == type: # ping
             self.send("3" + msg[1:])
