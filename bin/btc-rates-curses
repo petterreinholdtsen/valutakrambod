@@ -54,8 +54,8 @@ class CursesViewer(object):
         maxy, maxx = self.stdscr.getmaxyx()
         line = 2
         now = time.time()
-        s = "%15s %-6s %-11s %-11s %-5s  %4s %6s" % (
-            "Name", "Pair", "Bid", "Ask", "Spr", "Ftcd", "Age",
+        s = "%15s %-6s %-11s %-11s %-5s  %4s %6s %6s" % (
+            "Name", "Pair", "Bid", "Ask", "Spr", "Ftcd", "Age", "Freq",
             )
         self.stdscr.addstr( 1, 0, s)
         for entry in self.rates.keys():
