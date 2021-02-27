@@ -1,5 +1,9 @@
 #!/usr/bin/python3
 
+import sys
+import os
+sys.path.append(os.path.join(sys.path[0], '..'))
+
 import valutakrambod.client
 
 if __name__ == '__main__':

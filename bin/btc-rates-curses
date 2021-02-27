@@ -13,6 +13,10 @@ from os.path import expanduser
 from sortedcontainers.sorteddict import SortedDict
 import tornado.ioloop
 
+import sys
+import os
+sys.path.append(os.path.join(sys.path[0], '..'))
+
 import valutakrambod
 
 class CursesViewer(object):
