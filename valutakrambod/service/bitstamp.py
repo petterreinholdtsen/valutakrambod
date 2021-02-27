@@ -318,8 +318,8 @@ Run simple self test.
     def checkTimeout(self):
         print("check timed out")
         self.ioloop.stop()
-    def runCheck(self, check):
-        to = self.ioloop.call_later(30, self.checkTimeout)
+    def runCheck(self, check, timeout=30):
+        to = self.ioloop.call_later(timeout, self.checkTimeout)
         self.ioloop.add_callback(check)
         self.ioloop.start()
         self.ioloop.remove_timeout(to)
@@ -335,23 +335,28 @@ Run simple self test.
     def testCurrentRates(self):
         self.runCheck(self.checkCurrentRates)
 
-    def testWebsocket(self):
+    def checkWebsocket(self):
         """Test websocket subscription of updates.
 
         """
-        def printUpdate(service, pair, changed):
-            print(pair,
-                  service.rates[pair]['ask'],
-                  service.rates[pair]['bid'],
-                  time.time() - service.rates[pair]['when'] ,
-                  time.time() - service.rates[pair]['stored'] ,
-            )
+        def registerUpdate(service, pair, changed):
+            if False:
+                print(pair,
+                      service.rates[pair]['ask'],
+                      service.rates[pair]['bid'],
+                      time.time() - service.rates[pair]['when'] ,
+                      time.time() - service.rates[pair]['stored'] ,
+                )
+            self.updates += 1
             self.ioloop.stop()
-        self.s.subscribe(printUpdate)
+        self.s.subscribe(registerUpdate)
         c = self.s.websocket()
         c.connect()
-        self.ioloop.call_later(10, self.ioloop.stop)
-        self.ioloop.start()
+    def testWebsocket(self):
+        self.updates = 0
+        self.runCheck(self.checkWebsocket, timeout=10)
+        self.assertTrue(0 < self.updates)
+
     async def checkTradingConnection(self):
         # Unable to test without API access credentials in the config
         if self.s.confget('apikey', fallback=None) is None:
