@@ -3,6 +3,8 @@
 # This file is covered by the GPLv2 or later, read COPYING for details.
 
 import dateutil
+import tornado.ioloop
+import unittest
 
 from valutakrambod.services import Service
 
@@ -50,12 +52,26 @@ https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchang
         """Exchange rates do not provide websocket API 2018-06-27."""
         return None
 
-def main():
-    """
-Run simple self test.
-"""
-    s = Exchangerates()
-    print(s.currentRates())
+class TestExchangerates(unittest.TestCase):
+    def setUp(self):
+        self.s = Exchangerates()
+        self.ioloop = tornado.ioloop.IOLoop.current()
+    def checkTimeout(self):
+        print("check timed out")
+        self.ioloop.stop()
+    def runCheck(self, check, timeout=30):
+        to = self.ioloop.call_later(timeout, self.checkTimeout)
+        self.ioloop.add_callback(check)
+        self.ioloop.start()
+        self.ioloop.remove_timeout(to)
+    async def checkCurrentRates(self):
+        res = await self.s.currentRates()
+        pair = ('EUR', 'USD')
+        self.assertTrue(pair in res)
+        self.ioloop.stop()
+    def testCurrentRates(self):
+        self.runCheck(self.checkCurrentRates)
 
 if __name__ == '__main__':
-    main()
+    t = TestExchangerates()
+    unittest.main()
