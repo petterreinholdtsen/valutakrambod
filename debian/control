@@ -10,10 +10,10 @@ Build-Depends: debhelper (>= 9), dh-python, python-all, python-setuptools, pytho
   , python3-simplejson
   , python3-lxml
 Standards-Version: 3.9.8
-Homepage: https://github.com/petterreinholdtsen/valutakrambod
+Homepage: https://gitlab.com/petterreinholdtsen/valutakrambod
 X-Python3-Version: >= 3.2
-Vcs-Git: https://github.com/petterreinholdtsen/valutakrambod.git
-Vcs-Browser: https://github.com/petterreinholdtsen/valutakrambod
+Vcs-Git: https://gitlab.com/petterreinholdtsen/valutakrambod.git
+Vcs-Browser: https://gitlab.com/petterreinholdtsen/valutakrambod
 #Testsuite: autopkgtest-pkg-python
 
 Package: python3-valutakrambod

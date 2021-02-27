@@ -30,7 +30,7 @@ setup(
     keywords='currency exchange bitcoin',
     author='Petter Reinholdtsen',
     author_email='pere@hungry.com',
-    url='https://github.com/petterreinholdtsen/valutakrambod',
+    url='https://gitlab.com/petterreinholdtsen/valutakrambod',
     install_requires=REQUIREMENTS,
     tests_require=[
     ],
