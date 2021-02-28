@@ -250,7 +250,7 @@ loaded from the stored configuration.
             if marketpair:
                 pairstr = ("%s%s" % (marketpair[0], marketpair[1])).lower()
             orders = await self.service._query_private('v2/open_orders/%s/' % pairstr, {})
-            #print(orders)
+            #print("Response:", orders)
             """ Example output from the service
 [
  {'type': '0',
@@ -371,10 +371,11 @@ Run simple self test.
         pair = ('BTC', 'EUR')
         pairstr = self.s._makepair(pair[0], pair[1])
         o = await t.orders()
-        print(o)
+        #print("Orders:", o)
 
-        c = await t.cancelallorders()
-        print(c)
+        # Do not want to remove orders we did not place during testing
+        #c = await t.cancelallorders()
+        #print(c)
 
         rates = await self.s.currentRates()
         ask = rates[pair]['ask']
