@@ -299,6 +299,8 @@ have to be closed to the used price if our order is executed.
             fee = price * volume * Decimal(0.0025)
             return fee.quantize(Decimal('.01'), rounding=ROUND_UP)
     def trading(self):
+        if self.confget('apikey', fallback=None) is None:
+            return None
         if self.activetrader is None:
             self.activetrader = self.BitstampTrading(self)
         return self.activetrader
