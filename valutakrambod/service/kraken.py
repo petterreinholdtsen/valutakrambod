@@ -290,6 +290,8 @@ This is example output from the API call:
                 pair = (self.service._revCurrencyMap('X'+pairstr[0:3]),
                         self.service._revCurrencyMap('Z'+pairstr[3:]))
                 #print(pair)
+                if marketpair and not pair == marketpair:
+                    continue
                 volume = Decimal(order['vol'])
                 price = Decimal(order['descr']['price'])
                 if pair not in res:
