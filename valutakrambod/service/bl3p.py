@@ -198,7 +198,7 @@ N/A
 
             pairstr = "%s%s" % marketpair
             orders = await self.service._query_private('%s/money/orders' % pairstr, {})
-            print(orders)
+            #print(orders)
             """ Example output from the service
 {
   "orders": [
