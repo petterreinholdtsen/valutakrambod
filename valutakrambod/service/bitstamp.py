@@ -273,7 +273,7 @@ loaded from the stored configuration.
                 price = Decimal(order['price'])
                 if pair not in res:
                     res[pair] = {}
-                if type not in res:
+                if type not in res[pair]:
                     res[pair][type] = []
                 res[pair][type].append({
                     "price": price,
