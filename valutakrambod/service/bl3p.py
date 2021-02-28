@@ -196,10 +196,16 @@ N/A
         async def orders(self, marketpair = None):
             """Return the currently open orders in standardized format."""
 
-            pairstr = "%s%s" % marketpair
-            orders = await self.service._query_private('%s/money/orders' % pairstr, {})
-            #print(orders)
-            """ Example output from the service
+            if not marketpair:
+                pairs = self.service.ratepairs()
+            else:
+                pairs = (marketpair,)
+            res = {}
+            for pair in pairs:
+                pairstr = "%s%s" % pair
+                orders = await self.service._query_private('%s/money/orders' % pairstr, {})
+                #print(orders)
+                """ Example output from the service
 {
   "orders": [
     {
@@ -249,21 +255,20 @@ N/A
   ]
 }
 """
-            res = {}
-            for order in orders['orders']:
-                id = order['order_id']
-                pair = (order['item'], order['currency'])
-                volume = Decimal(order['amount']['value'])
-                price = Decimal(order['price']['value'])
-                if pair not in res:
-                    res[pair] = {}
-                if order['type'] not in res[pair]:
-                    res[pair][order['type']] = []
-                res[pair][order['type']].append({
-                    "price": price,
-                    "volume": volume,
-                    "id": id,
-                })
+                for order in orders['orders']:
+                    id = order['order_id']
+                    pair = (order['item'], order['currency'])
+                    volume = Decimal(order['amount']['value'])
+                    price = Decimal(order['price']['value'])
+                    if pair not in res:
+                        res[pair] = {}
+                    if order['type'] not in res[pair]:
+                        res[pair][order['type']] = []
+                    res[pair][order['type']].append({
+                        "price": price,
+                        "volume": volume,
+                        "id": id,
+                    })
             for pair in res.keys():
                 if 'ask' in res[pair]:
                     res[pair]['ask'] = sorted(res[pair]['ask'], key=lambda k: k['price'], reverse=True)
