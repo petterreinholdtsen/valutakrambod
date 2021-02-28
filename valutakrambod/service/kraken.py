@@ -13,7 +13,7 @@ import urllib
 import urllib.parse
 import tornado.ioloop
 
-from decimal import Decimal, ROUND_DOWN
+from decimal import Decimal, ROUND_DOWN, ROUND_UP
 from os.path import expanduser
 
 from valutakrambod.services import Orderbook
@@ -309,10 +309,12 @@ This is example output from the API call:
             #print(res)
             return res
         def estimatefee(self, side, price, volume):
-            """From https://www.kraken.com/help/fees, the max fee is 0.26%.
+            """From https://www.kraken.com/help/fees, the max fee is 0.26% + 0.01%.
 
             """
-            return price * volume * Decimal(0.0026)
+            fee = price * volume * Decimal(0.0027)
+            # Round up to try to avoid miscalculation
+            return fee.quantize(Decimal('.01'), rounding=ROUND_UP)
     def trading(self):
         if self.confget('apikey', fallback=None) is None:
             return None
