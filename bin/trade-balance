@@ -1,0 +1,69 @@
+#!/usr/bin/python3
+
+import configparser
+import functools
+from os.path import expanduser
+
+import tornado.ioloop
+
+import sys
+import os
+sys.path.append(os.path.join(sys.path[0], '..'))
+
+import valutakrambod
+
+class BalanceFetcher(object):
+    def __init__(self):
+        configpath = expanduser('~/.config/valutakrambod/config.ini')
+        config = configparser.ConfigParser()
+        config.read(configpath)
+        self.ioloop = tornado.ioloop.IOLoop.current()
+        self.services = valutakrambod.service.knownServices()
+        self.traders = []
+        self.data = {}
+        for e in self.services:
+            service = e()
+            service.confinit(config)
+            if service.trading():
+                self.ioloop.call_later(len(self.services),
+                                       functools.partial(self.getbalance, service))
+                self.traders.append(service)
+
+
+    def showbalance(self):
+        sum = {}
+        for service in sorted(self.data.keys()):
+            print(service, self.data[service])
+            for currency in self.data[service].keys():
+                if currency not in sum:
+                    sum[currency] = 0
+                sum[currency] += self.data[service][currency]
+        for currency in sorted(sum.keys()):
+            print("Sum", currency, sum[currency])
+        self.ioloop.stop()
+                
+            
+    async def getbalance(self, service):
+        t = service.trading()
+        b = await t.balance()
+        name = service.servicename()
+        self.data[name] = {}
+        for currency in ('BTC', 'EUR', 'USD'):
+            if currency in b['balance'] and b['balance'][currency] > 0:
+                self.data[name][currency] = b['balance'][currency]
+        # the last one turn off the light
+        if len(self.traders) == len(self.data.keys()):
+            self.showbalance()
+
+    def run(self):
+        try:
+            self.ioloop.start()
+        except KeyboardInterrupt:
+            pass
+
+def main():
+    fetcher = BalanceFetcher()
+    fetcher.run()
+
+if '__main__' == __name__:
+    main()
