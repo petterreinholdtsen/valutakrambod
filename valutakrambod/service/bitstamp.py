@@ -265,7 +265,10 @@ loaded from the stored configuration.
             for order in orders:
                 id = order['id']
                 type = { '0': 'bid', '1':'ask'}[order['type']]
-                pair = tuple(order['currency_pair'].split('/'))
+                if not marketpair:
+                    pair = tuple(order['currency_pair'].split('/'))
+                else:
+                    pair = marketpair
                 volume = Decimal(order['amount'])
                 price = Decimal(order['price'])
                 if pair not in res:
