@@ -38,9 +38,8 @@ class BalanceFetcher(object):
         for service in sorted(self.data.keys()):
             print(service, self.data[service])
             if self.showorders:
-                for marketpair in self.orders[service].keys():
-                    o = await self.orders[service][marketpair]
-                    print("  %s: %s" % (marketpair, o))
+                o = await self.orders[service]
+                print("  %s" % o)
             for currency in self.data[service].keys():
                 if currency not in sum:
                     sum[currency] = 0
@@ -55,9 +54,7 @@ class BalanceFetcher(object):
         b = t.balance();
         name = service.servicename()
         if self.showorders:
-            self.orders[name] = {}
-            for marketpair in service.ratepairs():
-                self.orders[name][marketpair] = t.orders(marketpair)
+            self.orders[name] = t.orders()
         b = await b
         d = {}
         for currency in ('BTC', 'EUR', 'USD'):
