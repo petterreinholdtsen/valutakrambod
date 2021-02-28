@@ -2,6 +2,7 @@
 
 import configparser
 import functools
+import optparse
 from os.path import expanduser
 
 import tornado.ioloop
@@ -21,6 +22,8 @@ class BalanceFetcher(object):
         self.services = valutakrambod.service.knownServices()
         self.traders = []
         self.data = {}
+        self.orders = {}
+        self.showorders = False
         for e in self.services:
             service = e()
             service.confinit(config)
@@ -30,10 +33,14 @@ class BalanceFetcher(object):
                 self.traders.append(service)
 
 
-    def showbalance(self):
+    async def showbalance(self):
         sum = {}
         for service in sorted(self.data.keys()):
             print(service, self.data[service])
+            if self.showorders:
+                for marketpair in self.orders[service].keys():
+                    o = await self.orders[service][marketpair]
+                    print("  %s: %s" % (marketpair, o))
             for currency in self.data[service].keys():
                 if currency not in sum:
                     sum[currency] = 0
@@ -45,15 +52,21 @@ class BalanceFetcher(object):
             
     async def getbalance(self, service):
         t = service.trading()
-        b = await t.balance()
+        b = t.balance();
         name = service.servicename()
-        self.data[name] = {}
+        if self.showorders:
+            self.orders[name] = {}
+            for marketpair in service.ratepairs():
+                self.orders[name][marketpair] = t.orders(marketpair)
+        b = await b
+        d = {}
         for currency in ('BTC', 'EUR', 'USD'):
             if currency in b['balance'] and b['balance'][currency] > 0:
-                self.data[name][currency] = b['balance'][currency]
+                d[currency] = b['balance'][currency]
         # the last one turn off the light
+        self.data[name] = d
         if len(self.traders) == len(self.data.keys()):
-            self.showbalance()
+            await self.showbalance()
 
     def run(self):
         try:
@@ -62,7 +75,13 @@ class BalanceFetcher(object):
             pass
 
 def main():
+    parser = optparse.OptionParser()
+    parser.add_option('-o', action="store_true", dest='orders',
+                      default=False, help='list open orders')
+    opt, args = parser.parse_args()
     fetcher = BalanceFetcher()
+    if opt.orders:
+        fetcher.showorders = True
     fetcher.run()
 
 if '__main__' == __name__:
