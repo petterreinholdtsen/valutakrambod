@@ -9,7 +9,7 @@ import tornado.ioloop
 import unittest
 import uuid
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from os.path import expanduser
 
 from valutakrambod.services import Service
@@ -96,20 +96,33 @@ orderbook/ticker.
             self._closedorders = {}
             self.verbose = False
             # Fill up the accounts with some content
-            self._balance = {}
+            self._balance = {
+                'balance':{},
+                'available': {},
+            }
             for pair in service.ratepairs():
                 if 0 == service.n % 2:
                     self.log("Service %s started with 1 %s" % (service.servicename(),
                                                                 pair[0]))
-                    self._balance[pair[0]] = Decimal('1') # BTC
-                    self._balance[pair[1]] = Decimal('0') # EUR
+                    self._balance['available'][pair[0]] = Decimal('1') # BTC
+                    self._balance['available'][pair[1]] = Decimal('0') # EUR
                 else:
                     self.log("Service %s started with 10 %s" % (service.servicename(),
                                                                 pair[1]))
-                    self._balance[pair[0]] = Decimal('0') # BTC
-                    self._balance[pair[1]] = Decimal('10') # EUR
-                #self._balance[pair[0]] = Decimal('1') # BTC
-                #self._balance[pair[1]] = Decimal('10') # EUR
+                    self._balance['available'][pair[0]] = Decimal('0') # BTC
+                    self._balance['available'][pair[1]] = Decimal('10') # EUR
+                #self._balance['available'][pair[0]] = Decimal('1') # BTC
+                #self._balance['available'][pair[1]] = Decimal('10') # EUR
+        def roundtovalidprice(self, pair, side, price):
+            """Round the given price to the nearest accepted value, ie 1 digit
+after decimal dot.
+
+            """
+            digits = {
+                (('BTC','EUR'),Orderbook.SIDE_ASK): Decimal('.1'),
+                (('BTC','EUR'),Orderbook.SIDE_BID): Decimal('.1'),
+            }[(pair,side)]
+            return price.quantize(digits, rounding=ROUND_DOWN)
         def log(self, msg):
             if self.verbose:
                 print(msg)
@@ -121,10 +134,12 @@ orderbook/ticker.
             self.log("Balance at start: %s" % self._balance)
             orderref = uuid.uuid1()
             self._orders[orderref] = (pair, side, price, volume, immediate)
-            if pair[0] not in self._balance:
-                self._balance[pair[0]] = Decimal(0)
-            if pair[1] not in self._balance:
-                self._balance[pair[1]] = Decimal(0)
+            if pair[0] not in self._balance['available']:
+                self._balance['balance'][pair[0]] = Decimal(0)
+                self._balance['available'][pair[0]] = Decimal(0)
+            if pair[1] not in self._balance['available']:
+                self._balance['balance'][pair[1]] = Decimal(0)
+                self._balance['available'][pair[1]] = Decimal(0)
             if Orderbook.SIDE_BID == side:
                 self.log("Trying to buy %s %s for %s %s" % (
                     volume, pair[0], price, pair[1],
@@ -133,7 +148,7 @@ orderbook/ticker.
                 book = self.service.orderbooks[pair]
                 totalcost = Decimal(0.0)
                 #print("Askbook1:", book.ask)
-                moneyleft = self._balance[pair[1]]
+                moneyleft = self._balance['available'][pair[1]]
                 # Delay removal to make sure keys() return all the keys in the set
                 toremove = []
                 ordercount = 0
@@ -184,13 +199,13 @@ orderbook/ticker.
                         break
                 for orderprice in toremove:
                     book.remove(book.SIDE_ASK, orderprice)
-                self._balance[pair[0]] = self._balance[pair[0]] + \
+                self._balance['available'][pair[0]] = self._balance['available'][pair[0]] + \
                                          volume - volumeleft
-                self._balance[pair[1]] = moneyleft
+                self._balance['available'][pair[1]] = moneyleft
                 #print("Askbook2:", book.ask)
                 #print("Left:", volumeleft)
-                #print("Balance %s:" % pair[0], str(self._balance[pair[0]]))
-                #print("Balance %s:" % pair[1], str(self._balance[pair[1]]))
+                #print("Balance %s:" % pair[0], str(self._balance['available'][pair[0]]))
+                #print("Balance %s:" % pair[1], str(self._balance['available'][pair[1]]))
             elif Orderbook.SIDE_ASK == side:
                 self.log("Trying to sell %s %s for %s %s" % (
                     volume, pair[0], price, pair[1],
@@ -199,7 +214,7 @@ orderbook/ticker.
                 book = self.service.orderbooks[pair]
                 totalearn = Decimal(0.0)
                 #print("Bidbook1:", book.bid)
-                moneyleft = self._balance[pair[0]]
+                moneyleft = self._balance['available'][pair[0]]
                 if moneyleft < volume:
                     raise Exception("not enough balance to sell %s %s" % (
                         volume, pair[0]
@@ -250,24 +265,38 @@ orderbook/ticker.
                         break
                 for orderprice in toremove:
                     book.remove(book.SIDE_BID, orderprice)
-                self._balance[pair[1]] = self._balance[pair[1]] + totalearn
-                self._balance[pair[0]] = self._balance[pair[0]] - volume + volumeleft
+                self._balance['available'][pair[1]] = self._balance['available'][pair[1]] + totalearn
+                self._balance['available'][pair[0]] = self._balance['available'][pair[0]] - volume + volumeleft
                 #print("Bidbook2:", book.bid)
                 #print("Left:", volumeleft)
-                #print("Balance %s:" % pair[0], str(self._balance[pair[0]]))
-                #print("Balance %s:" % pair[1], str(self._balance[pair[1]]))
+                #print("Balance %s:" % pair[0], str(self._balance['available'][pair[0]]))
+                #print("Balance %s:" % pair[1], str(self._balance['available'][pair[1]]))
             self.log("Balance when done: %s" % self._balance)
             return orderref
-        def cancelorder(self, pair, orderref):
+        async def cancelorder(self, pair, orderref):
             if orderref in self._orders:
                 info = self._orders[orderref]
                 del self._orders[orderref]
                 return info
             return None
-        def cancelallorders(self):
+        async def cancelallorders(self):
             self._orders.clear()
-        def orders(self, market=None):
-            return self._orders
+        async def orders(self, market=None):
+            res = {}
+            for id, info in self._orders.items():
+                pair = info[0]
+                if pair not in res:
+                    res[pair] = {}
+                side = info[1]
+                if side not in res[pair]: # ask/bid
+                    res[pair][side] = []
+                res[pair][side].append({
+                    'price': info[2],
+                    'volume': info[3],
+                    'type': info[4], # FIXME immediate or not
+                    'id': id,
+                })
+            return res
         def closedorders(self, marked=None):
             raise NotImplementedError()
         def estimatefee(self, side, price, volume):
@@ -351,8 +380,8 @@ Run simple self test.
 
         b2 = await t.balance()
         #print(b2)
-        self.assertTrue(b1['BTC'] > b2['BTC'], 'sold some BTC')
-        self.assertTrue(b1['EUR'] < b2['EUR'], 'bought some EUR')
+        self.assertTrue(b1['available']['BTC'] > b2['available']['BTC'], 'sold some BTC')
+        self.assertTrue(b1['available']['EUR'] < b2['available']['EUR'], 'bought some EUR')
 
         ref = await t.placeorder(('BTC', 'EUR'), Orderbook.SIDE_ASK, None, Decimal(0.5))
 #        ref = await t.placeorder(('BTC', 'EUR'), Orderbook.SIDE_ASK, None, Decimal(0.5))
@@ -362,10 +391,10 @@ Run simple self test.
         ref = await t.placeorder(('BTC', 'EUR'), Orderbook.SIDE_BID, 5030,   Decimal(0.5))
         b3 = await t.balance()
         #print(b3)
-        self.assertTrue(b2['BTC'] < b3['BTC'], 'bought back some BTC')
-        self.assertTrue(b2['EUR'] > b3['EUR'], 'sold back some EUR')
+        self.assertTrue(b2['available']['BTC'] < b3['available']['BTC'], 'bought back some BTC')
+        self.assertTrue(b2['available']['EUR'] > b3['available']['EUR'], 'sold back some EUR')
 
-        self.assertTrue(b1['BTC'] == b3['BTC'], 'lost BTC value in the process')
+        self.assertTrue(b1['available']['BTC'] == b3['available']['BTC'], 'lost BTC value in the process')
 
         t.cancelorder('BTCEUR', ref)
         t.cancelallorders()
