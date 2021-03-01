@@ -282,9 +282,9 @@ loaded from the stored configuration.
                 })
             for pair in res.keys():
                 if 'ask' in res[pair]:
-                    res[pair]['ask'] = sorted(res[pair]['ask'], key=lambda k: k['price'], reverse=True)
+                    res[pair]['ask'] = sorted(res[pair]['ask'], key=lambda k: k['price'])
                 if 'bid' in res[pair]:
-                    res[pair]['bid'] = sorted(res[pair]['bid'], key=lambda k: k['price'])
+                    res[pair]['bid'] = sorted(res[pair]['bid'], key=lambda k: k['price'], reverse=True)
             #print(res)
             return res
         def estimatefee(self, side, price, volume):
