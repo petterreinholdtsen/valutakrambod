@@ -181,7 +181,7 @@ from the current period and not too short.
                                        functools.partial(self.runRefresh, service))
                 # And do regular updates too
                 updateperiod = 60
-                if self.opt.dummy:
+                if self.opt.dummy and -1 != service.servicename().find('DummyService'):
                     updateperiod = 0.1
                 service.periodicUpdate(updateperiod)
             if sock:
