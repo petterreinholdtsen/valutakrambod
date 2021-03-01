@@ -292,14 +292,16 @@ loaded from the stored configuration.
 
             ALL TRADING PAIRS (CUMULATIVE)
             Fee %	30 days USD volume
+            0.50%	< $10,000
             0.25%	< $20,000
             [...]
 
 Using our set price to calculate amount for fixed fee, as our price
-have to be closed to the used price if our order is executed.
+have to be closed to the used price if our order is executed.  Assume
+maximum fee to avoid under-estimating.
 
             """
-            fee = price * volume * Decimal(0.0025)
+            fee = price * volume * Decimal(0.005)
             return fee.quantize(Decimal('.01'), rounding=ROUND_UP)
     def trading(self):
         if self.confget('apikey', fallback=None) is None:
