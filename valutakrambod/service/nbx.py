@@ -32,9 +32,9 @@ found in https://nbx.com/developers .
         for pair in pairs:
             o = Orderbook()
             url = "%smarkets/%s-%s/orders" % (self.baseurl, pair[0], pair[1])
-            print(url)
+            #print(url)
             j, r = await self._jsonget(url)
-            print(j)
+            #print(j)
             for order in j:
                 oside = {
                     'BUY': o.SIDE_BID,
