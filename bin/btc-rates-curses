@@ -160,7 +160,6 @@ from the current period and not too short.
         for e in services:
             service = e(self.currencies)
             service.confinit(self.config)
-            self.addnote("Enabling %s" % service.servicename(), 5)
             self.services.append(service)
             service.subscribe(self.newdata)
             service.errsubscribe(self.logerror)
