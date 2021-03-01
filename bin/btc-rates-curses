@@ -145,14 +145,13 @@ from the current period and not too short.
         if period is not float('nan'):
             if period > 20 and \
                abs(service.periodic.callback_time/1000 - (period/2)) > 5:
-              if False:
-                self.logerror(service, "Change %s period from %.1f (%1.f) to %.1f" % (
+                service.periodicUpdate(period / 2)
+                self.addnote("changed %s period from %.1f (%1.f) to %.1f" % (
                     service.servicename(),
                     service.periodic.callback_time/1000,
                     abs(service.periodic.callback_time/1000 - (period/2)),
                     period/2,
                 ))
-                service.periodicUpdate(period / 2)
     def run(self, stdscr):
         self.stdscr = stdscr
         self.stdscr.clear()
