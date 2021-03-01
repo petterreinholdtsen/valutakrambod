@@ -143,15 +143,14 @@ from the current period and not too short.
             return
         period = service.guessperiod(pair)
         if period is not float('nan'):
-            if period > 20 and \
-               abs(service.periodic.callback_time/1000 - (period/2)) > 5:
-                service.periodicUpdate(period / 2)
-                self.addnote("changed %s period from %.1f (%1.f) to %.1f" % (
-                    service.servicename(),
-                    service.periodic.callback_time/1000,
-                    abs(service.periodic.callback_time/1000 - (period/2)),
-                    period/2,
-                ))
+            current = service.periodic.callback_time/1000
+            new = period / 2
+            change = abs(current - new)
+            #print("period %s current %s new %s change %s" % (period, current, new, change))
+            if period > 20 and change > 5:
+                service.periodicUpdate(new)
+                self.addnote("changed %s period from %.1f (%1.f) to %.1f" %
+                             (service.servicename(), current, change, new))
     def run(self, stdscr):
         self.stdscr = stdscr
         self.stdscr.clear()
