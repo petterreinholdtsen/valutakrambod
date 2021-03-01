@@ -78,8 +78,13 @@ class CursesViewer(object):
                 updated = "+"
             else:
                 updated = " "
-            s = "%15s%s%s%s %11.4f %11.4f %5.1f%% %4d %6.f %6.f" % (
+            if service.trading():
+                privileged = "*"
+            else:
+                privileged = " "
+            s = "%15s%s%s%s%s %11.4f %11.4f %5.1f%% %4d %6.f %6.f" % (
                 entry[1],
+                privileged,
                 updated,
                 pair[0],
                 pair[1],
@@ -92,6 +97,10 @@ class CursesViewer(object):
             )
             self.stdscr.addstr( line, 0, s)
             line = line + 1
+
+        line = line + 1
+        self.stdscr.addstr( line, 0, "   (*=privileged, +=updated)")
+        line = line + 1
 
         line = line + 1
         for note, expire in self.notes[-1::-1]:
