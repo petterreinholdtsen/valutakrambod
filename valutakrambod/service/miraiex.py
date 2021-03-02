@@ -36,9 +36,9 @@ https://developers.miraiex.com/ .
         for pair in pairs:
             o = Orderbook()
             url = "%smarkets/%s%s/depth" % (self.baseurl, pair[0], pair[1])
-            print(url)
+            #print(url)
             j, r = await self._jsonget(url)
-            print(j)
+            #print(j)
             for side in ('asks', 'bids'):
                 oside = {
                     'asks' : o.SIDE_ASK,
