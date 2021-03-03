@@ -57,9 +57,13 @@ class BalanceFetcher(object):
             self.orders[name] = t.orders()
         b = await b
         d = {}
+        if self.opt.available:
+            v = 'available'
+        else:
+            v = 'balance'
         for currency in ('BTC', 'EUR', 'USD'):
-            if currency in b['balance'] and b['balance'][currency] > 0:
-                d[currency] = b['balance'][currency]
+            if currency in b[v] and b[v][currency] > 0:
+                d[currency] = b[v][currency]
         # the last one turn off the light
         self.data[name] = d
         if len(self.traders) == len(self.data.keys()):
@@ -73,10 +77,13 @@ class BalanceFetcher(object):
 
 def main():
     parser = optparse.OptionParser()
+    parser.add_option('-a', help='list available assets, not totals',
+                      action="store_true", dest='available', default=False)
     parser.add_option('-o', action="store_true", dest='orders',
                       default=False, help='list open orders')
     opt, args = parser.parse_args()
     fetcher = BalanceFetcher()
+    fetcher.opt = opt
     if opt.orders:
         fetcher.showorders = True
     fetcher.run()
