@@ -140,7 +140,9 @@ volume for price.
 
 class Service(object):
     def __init__(self, currencies=None):
-        self.http_client = httpclient.AsyncHTTPClient()
+        self.http_client = httpclient.AsyncHTTPClient(
+            defaults=dict(user_agent="Valutakrambod library client")
+        )
         self.rates = {}
         self.orderbooks = {}
         self.subscribers = []
