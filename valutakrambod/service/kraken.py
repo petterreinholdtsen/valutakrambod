@@ -535,7 +535,7 @@ Run simple self test.
             print("placed orders: %s" % txs)
             for tx in txs:
                 print("cancelling order %s" % tx)
-                j = await t.cancelorder(pairstr, tx)
+                j = await t.cancelorder(pair, tx)
                 print("done cancelling: %s" % str(j))
                 self.assertTrue('count' in j and j['count'] == 1)
         else:
@@ -554,7 +554,7 @@ Run simple self test.
             print("placed orders: %s" % txs)
             for tx in txs:
                 print("cancelling order %s" % tx)
-                j = await t.cancelorder(pairstr, tx)
+                j = await t.cancelorder(pair, tx)
                 print("done cancelling: %s" % str(j))
                 self.assertTrue('count' in j and j['count'] == 1)
         else:

@@ -407,7 +407,7 @@ Run simple self test.
                                      bidprice, bidamount, immediate=False)
             print("placed orders: %s" % tx)
             print("cancelling order %s" % tx)
-            j = await t.cancelorder(pairstr, tx)
+            j = await t.cancelorder(pair, tx)
             print("done cancelling: %s" % str(j))
             self.assertTrue('id' in j and j['id'] == tx)
         else:
@@ -425,7 +425,7 @@ Run simple self test.
                                      askprice, askamount, immediate=False)
             print("placed orders: %s" % tx)
             print("cancelling order %s" % tx)
-            j = await t.cancelorder(pairstr, tx)
+            j = await t.cancelorder(pair, tx)
             print("done cancelling: %s" % str(j))
             self.assertTrue('id' in j and j['id'] == tx)
         else:
