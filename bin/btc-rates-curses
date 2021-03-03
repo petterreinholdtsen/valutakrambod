@@ -213,6 +213,28 @@ class dummyCurses(object):
 def dummywrapper(f):
     return f(dummyCurses())    
 
+
+def catch_stdout_stderr(viewer):
+    """Make stdout and stderr messages easier to track down in curses node.
+    """
+
+    class out2note(object):
+        def __init__(self, prefix = "", viewer=None, lifetime=120):
+            self.prefix = prefix
+            self.viewer = viewer
+            self.lifetime = lifetime
+        def write(self, msg):
+            self.viewer.addnote("%s%s" % (self.prefix, msg),
+                                lifetime=self.lifetime)
+        def flush(self):
+            pass
+    sys.stdout = out2note("stdout: ", viewer=viewer)
+    # Is this causing a deadlock?  Perhaps caused by exceptions?
+    # Something seem to lock up, so disable it for now [pere
+    # 2021-03-02].
+    #sys.stderr = out2note("stderr: ", viewer=viewer)
+
+
 def main():
     parser = optparse.OptionParser()
     parser.add_option('-c', help='use curses text interface',
@@ -226,6 +248,7 @@ def main():
     currencies = ['BTC', 'USD', 'EUR', 'NOK']
     c = CursesViewer(currencies, opt=opt, args=args)
     if opt.curses:
+        catch_stdout_stderr(c)
         wrapper(c.run)
     else:
         dummywrapper(c.run)
