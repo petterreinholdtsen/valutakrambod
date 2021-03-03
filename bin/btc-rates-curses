@@ -149,7 +149,7 @@ from the current period and not too short.
             #print("period %s current %s new %s change %s" % (period, current, new, change))
             if period > 20 and change > 5:
                 service.periodicUpdate(new)
-                self.addnote("changed %s period from %.1f (%1.f) to %.1f" %
+                self.addnote("%s period changed from %.1f (%1.f) to %.1f" %
                              (service.servicename(), current, change, new))
     def run(self, stdscr):
         self.stdscr = stdscr
