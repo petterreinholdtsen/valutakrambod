@@ -264,6 +264,8 @@ found in https://nbx.com/developers .
 #    'market': 'BTC-NOK'
 #}
 
+                    if order['events']['closedAt']:
+                        continue # Only return open orders
                     volume = order['quantity']
                     price = order['execution']['price']
                     pair = tuple(order['market'].split('-', 1))
