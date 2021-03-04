@@ -81,7 +81,7 @@ for the balance.
         """
         return price
     def minimum_order(self, marketpair):
-        minimum_volume = Decimal(0.002)
+        minimum_volume = Decimal(0.0002)
         if ('BTC', 'EUR') == marketpair:
             minimum_value = Decimal(5)
         else:
