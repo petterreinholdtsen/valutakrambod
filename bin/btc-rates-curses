@@ -197,7 +197,11 @@ from the current period and not too short.
         except KeyboardInterrupt:
             pass
         for s, c in self.streamcollectors.items():
-            c.close()
+            try:
+                c.close()
+            except RuntimeError as e:
+                self.log("Failing to close %s stream, ignoring" % s.servicename())
+                pass # Ignore errors, we are exiting
 
 class dummyCurses(object):
     def clear(self):
