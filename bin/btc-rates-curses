@@ -200,7 +200,7 @@ from the current period and not too short.
             try:
                 c.close()
             except RuntimeError as e:
-                self.log("Failing to close %s stream, ignoring" % s.servicename())
+                print("Failing to close %s stream, ignoring" % s.servicename())
                 pass # Ignore errors, we are exiting
 
 class dummyCurses(object):
