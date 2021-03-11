@@ -290,7 +290,8 @@ seconds specified in as an argument.  The default update frequency is
                              book.bid.peekitem(0)[0],
                              book.lastupdate)
         else:
-            self.logerror("%s order book empty, not updating rates" % self.servicename())
+            self.logerror("%s %s order book empty, not updating rates" % (
+                pair, self.servicename()))
 
     def guessperiod(self, pair):
         if pair not in self.updates:
